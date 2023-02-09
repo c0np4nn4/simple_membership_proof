@@ -30,3 +30,5 @@ blake2 = { version = "0.9" }
 digest = "0.9"
 derivative = { version = "2.0", features = ["use_core"] }
 tracing = { version = "0.1", default-features = false, features = [ "attributes" ], optional = true }
+
+elliptic-curve = "0.12.3"

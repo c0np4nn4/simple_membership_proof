@@ -58,4 +58,3 @@ fn test_merkle_tree() {
         .unwrap();
     assert!(result);
 }
-

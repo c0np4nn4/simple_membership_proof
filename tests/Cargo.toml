@@ -12,3 +12,7 @@ ark-std = { version = "^0.3.0", default-features = false }
 
 tracing = { version = "0.1", default-features = false, features = [ "attributes" ] }
 tracing-subscriber = { version = "0.2" }
+
+ark-bls12-381 = { version = "^0.3.0" }
+ark-snark = { version = "^0.3.0", default-features = false }
+ark-groth16 = { version = "^0.3.0" }

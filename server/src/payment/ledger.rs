@@ -5,7 +5,7 @@ use ark_crypto_primitives::crh::{
     injective_map::{PedersenCRHCompressor, TECompressor},
     pedersen, TwoToOneCRH, CRH,
 };
-use ark_crypto_primitives::merkle_tree::{self, MerkleTree, Path};
+use ark_crypto_primitives::merkle_tree::{self, MerkleTree};
 use ark_ed_on_bls12_381::EdwardsProjective;
 use ark_std::rand::Rng;
 use std::collections::HashMap;
@@ -83,7 +83,7 @@ pub type AccMerkleTree = MerkleTree<MerkleConfig>;
 /// The root of the account Merkle tree.
 pub type AccRoot = <TwoToOneHash as TwoToOneCRH>::Output;
 /// A membership proof for a given account.
-pub type AccPath = Path<MerkleConfig>;
+// pub type AccPath = Path<MerkleConfig>;
 
 #[derive(Clone)]
 pub struct State {

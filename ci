@@ -1,0 +1,25 @@
+#!/bin/bash
+
+var=$1
+
+if [ $1 == "server" ]
+then
+  echo "[!] Server"
+  # cargo run --bin server --release
+  cargo run --bin server
+
+elif [ $1 == "client" ]
+then
+  echo "[!] Client"
+  # cargo run --bin client --release
+  cargo run --bin client
+
+elif [ $1 == "test" ]
+then
+  echo "[!] Test"
+  # cargo test --release
+  cargo test
+
+else
+  echo "Invalid Option"
+fi
