@@ -86,7 +86,11 @@ fn merkle_tree_groht16() {
         )
         .unwrap();
 
+        // public input
         let root = tree.root();
+
+        // private input
+        let leaf = leaf;
         let path = tree.generate_proof(leaf_idx).unwrap();
 
         MyCircuit {
@@ -94,10 +98,10 @@ fn merkle_tree_groht16() {
             leaf_crh_params,
             two_to_one_crh_params,
 
-            // public inputs
+            // public input
             root,
 
-            // witness
+            // private inputs (witness)
             leaf,
             authentication_path: Some(path),
         }
@@ -106,11 +110,14 @@ fn merkle_tree_groht16() {
     let circuit_for_key_gen = build_my_circuit(20, 1);
 
     let mut rng = ark_std::test_rng();
+
     let (pk, vk) =
         Groth16::<Bls12_381>::circuit_specific_setup(circuit_for_key_gen, &mut rng).unwrap();
 
     let circuit = build_my_circuit(20, 1);
     let public_input = [circuit.root];
+
+    // --------------------------
 
     let proof = Groth16::prove(&pk, circuit, &mut rng).unwrap();
     let valid_proof = Groth16::verify(&vk, &public_input, &proof).unwrap();

@@ -102,6 +102,7 @@ impl State {
     /// Create an empty ledger that supports `num_accounts` accounts.
     pub fn new(num_accounts: usize, parameters: &Parameters) -> Self {
         let height = ark_std::log2(num_accounts);
+
         let account_merkle_tree = MerkleTree::blank(
             &parameters.leaf_crh_params,
             &parameters.two_to_one_crh_params,

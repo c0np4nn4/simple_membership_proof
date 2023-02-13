@@ -7,19 +7,13 @@ use hyper::StatusCode;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
-struct RegisterUserRequest {
+struct PutMessageRequest {
     _user_name: String,
     user_ecc_pk: String,
 }
 
-// #[derive(Serialize)]
-// struct RegisterUserResponse {
-//     encrypted_payment_pk: String,
-//     encrypted_payment_sk: String
-// }
-
-pub async fn register_user(mut ctx: Context) -> Response {
-    let body: RegisterUserRequest = match ctx.body_json().await {
+pub async fn put_message(mut ctx: Context) -> Response {
+    let body: PutMessageRequest = match ctx.body_json().await {
         Ok(v) => v,
         Err(e) => {
             return hyper::Response::builder()

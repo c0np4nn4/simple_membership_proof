@@ -1,6 +1,7 @@
 use super::ledger::*;
 use super::signature::schnorr;
 use ark_ed_on_bls12_381::EdwardsProjective;
+use serde::Serialize;
 
 /// Account public key used to verify transaction signatures.
 pub type AccountPublicKey = schnorr::PublicKey<EdwardsProjective>;
@@ -8,7 +9,7 @@ pub type AccountPublicKey = schnorr::PublicKey<EdwardsProjective>;
 pub type AccountSecretKey = schnorr::SecretKey<EdwardsProjective>;
 
 /// Account identifier. This prototype supports only 256 accounts at a time.
-#[derive(Hash, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Debug)]
+#[derive(Serialize, Hash, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Debug)]
 pub struct AccountId(pub u8);
 
 impl AccountId {
