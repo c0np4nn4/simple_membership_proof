@@ -31,6 +31,7 @@ pub async fn get_balance(mut ctx: Context) -> Response {
         }
     };
 
+    // 자동으로 입력 걸러주는지 확인
     println!("body: {:?}", body);
 
     let state = ctx.state.state_thing;
@@ -46,6 +47,8 @@ pub async fn get_balance(mut ctx: Context) -> Response {
         }
     };
 
+    // struct serializing 실습
+    // https://blog.majecty.com/posts/2018-12-31-a-rust-serde-derive-value.html
     let t = Testing {
         test_code: 216,
         test_str: "jeong".to_string(),
@@ -58,6 +61,7 @@ pub async fn get_balance(mut ctx: Context) -> Response {
             "[+] get_balance, account_id: {:?}, balance: {:?}\n",
             // body.account_id, b.balance.0
             body.account_id, serialized_t
+            
         )
         .into(),
     )
