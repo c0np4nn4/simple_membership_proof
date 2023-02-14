@@ -16,8 +16,8 @@ use tui::{
     widgets::{Block, BorderType, Borders, ListState, Paragraph, Row, Table, Tabs},
     Terminal,
 };
-use ui::{render_home, render_pets};
-use utils::{add_random_pet_to_db, read_db, remove_pet_at_index};
+use ui::{render_home, render_reqs};
+// use utils::{add_random_pet_to_db, read_db, remove_pet_at_index};
 
 mod ui;
 mod utils;
@@ -44,8 +44,25 @@ impl From<MenuItem> for usize {
     }
 }
 
+#[derive(Copy, Clone, Debug)]
+pub enum ReqItem {
+    GET_TREE,
+    IS_MEMBER,
+}
+
+impl From<ReqItem> for usize {
+    fn from(input: ReqItem) -> usize {
+        match input {
+            ReqItem::GET_TREE => 0,
+            ReqItem::IS_MEMBER => 1,
+        }
+    }
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode().expect("can run in raw mode");
+    tui_logger::init_logger(log::LevelFilter::Trace).unwrap();
+    tui_logger::set_default_level(log::LevelFilter::Debug);
 
     let (tx, rx) = mpsc::channel();
     let tick_rate = Duration::from_millis(200);
@@ -77,12 +94,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let menu_titles = vec!["Home", "Requests"];
     let mut active_menu_item = MenuItem::Home;
-    let mut pet_list_state = ListState::default();
-    pet_list_state.select(Some(0));
+
+    let mut selected_req_item = ReqItem::GET_TREE;
 
     loop {
         terminal.draw(|rect| {
             let size = rect.size();
+
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .margin(2)
@@ -135,15 +153,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             match active_menu_item {
                 MenuItem::Home => rect.render_widget(render_home(), chunks[1]),
                 MenuItem::Request => {
-                    let pets_chunks = Layout::default()
-                        .direction(Direction::Horizontal)
+                    let req_layout = Layout::default()
+                        .direction(Direction::Vertical)
                         .constraints(
                             [Constraint::Percentage(20), Constraint::Percentage(80)].as_ref(),
                         )
                         .split(chunks[1]);
-                    let (left, right) = render_pets(&pet_list_state);
-                    rect.render_stateful_widget(left, pets_chunks[0], &mut pet_list_state);
-                    rect.render_widget(right, pets_chunks[1]);
+
+                    render_reqs(rect, req_layout, &selected_req_item);
                 }
             }
             rect.render_widget(footer, chunks[2]);
@@ -158,47 +175,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 KeyCode::Char('h') => active_menu_item = MenuItem::Home,
                 KeyCode::Char('r') => active_menu_item = MenuItem::Request,
-                // KeyCode::Char('a') => {
-                //     add_random_pet_to_db().expect("can add new random pet");
-                // }
-                // KeyCode::Char('d') => {
-                //     remove_pet_at_index(&mut pet_list_state).expect("can remove pet");
-                // }
-                KeyCode::Down => {
-                    if let Some(selected) = pet_list_state.selected() {
-                        let amount_pets = read_db().expect("can fetch pet list").len();
-                        if selected >= amount_pets - 1 {
-                            pet_list_state.select(Some(0));
-                        } else {
-                            pet_list_state.select(Some(selected + 1));
-                        }
+
+                KeyCode::Char('1') => {
+                    selected_req_item = ReqItem::GET_TREE;
+                    log::info!(" Request `Get Tree`");
+                }
+
+                KeyCode::Char('2') => {
+                    selected_req_item = ReqItem::IS_MEMBER;
+                    log::info!(" Request `Is Member`");
+                }
+
+                KeyCode::Enter => match selected_req_item {
+                    ReqItem::GET_TREE => {
+                        let mut url = String::from("http://127.0.0.1:8080");
+                        let cmd_register_user = "/register_user";
+                        url += cmd_register_user;
+
+                        let url = url.parse::<hyper::Uri>().unwrap();
                     }
-                }
-                KeyCode::Up => {
-                    if let Some(selected) = pet_list_state.selected() {
-                        let amount_pets = read_db().expect("can fetch pet list").len();
-                        if selected > 0 {
-                            pet_list_state.select(Some(selected - 1));
-                        } else {
-                            pet_list_state.select(Some(amount_pets - 1));
-                        }
+                    ReqItem::IS_MEMBER => {
+                        log::info!(" not implemented yet!")
                     }
-                }
-
-                KeyCode::Enter => {
-                    let pet_list = read_db().unwrap();
-
-                    let selected_pet = pet_list
-                        .get(
-                            pet_list_state
-                                .selected()
-                                .expect("there is always a selected pet"),
-                        )
-                        .expect("exists")
-                        .clone();
-
-                    println!("selected: {:?}", selected_pet.name);
-                }
+                },
                 _ => {}
             },
             Event::Tick => {}

@@ -9,5 +9,18 @@ serde = {version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 rand = { version = "0.7.3", default-features = false, features = ["std"] }
+<<<<<<< HEAD
 tui = { version = "0.14", default-features = false, features = ['crossterm', 'serde'] }
 thiserror = "1.0"
+=======
+tui = { version = "0.19", default-features = false, features = ['crossterm', 'serde'] }
+thiserror = "1.0"
+
+tui-logger = "0.8.1"
+log = "0.4.17"
+
+hyper = { version = "1.0.0-rc.2", features = ["full"] }
+tokio = { version = "1", features = ["full"] }
+http-body-util = "0.1.0-rc.2"
+bytes = "1"
+>>>>>>> aee250b (wip: client ui has been updated)
