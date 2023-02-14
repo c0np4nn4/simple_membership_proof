@@ -1,6 +1,6 @@
 use ark_std::test_rng;
 use bytes::Bytes;
-use handler::{add_balance, get_balance, put_message, register_user};
+use handler::{add_balance, get_balance, get_tree, put_message, register_user};
 use hyper::{
     body::to_bytes,
     service::{make_service_fn, service_fn},
@@ -104,6 +104,7 @@ async fn main() {
     let mut router: Router = Router::new();
 
     // get
+    router.get("/get_tree", Box::new(get_tree));
     router.get("/get_balance", Box::new(get_balance));
 
     // post
@@ -136,6 +137,8 @@ async fn route(
     req: Request<hyper::Body>,
     app_state: AppState,
 ) -> Result<Response, Error> {
+    println!("[!] route has been invoked!, req: {:?}", req);
+
     let found_handler = router.route(req.uri().path(), req.method());
     let resp = found_handler
         .handler

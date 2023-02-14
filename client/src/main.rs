@@ -17,6 +17,7 @@ use tui::{
     Terminal,
 };
 use ui::{render_home, render_reqs};
+use utils::fetch_url;
 // use utils::{add_random_pet_to_db, read_db, remove_pet_at_index};
 
 mod ui;
@@ -59,7 +60,8 @@ impl From<ReqItem> for usize {
     }
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode().expect("can run in raw mode");
     tui_logger::init_logger(log::LevelFilter::Trace).unwrap();
     tui_logger::set_default_level(log::LevelFilter::Debug);
@@ -189,10 +191,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 KeyCode::Enter => match selected_req_item {
                     ReqItem::GET_TREE => {
                         let mut url = String::from("http://127.0.0.1:8080");
-                        let cmd_register_user = "/register_user";
+                        let cmd_register_user = "/get_tree";
                         url += cmd_register_user;
 
                         let url = url.parse::<hyper::Uri>().unwrap();
+
+                        fetch_url(url).await;
                     }
                     ReqItem::IS_MEMBER => {
                         log::info!(" not implemented yet!")
