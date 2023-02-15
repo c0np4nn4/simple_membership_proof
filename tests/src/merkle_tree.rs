@@ -1,4 +1,4 @@
-use std::io;
+extern crate rand;
 use rand::Rng;
 
 #[derive(Debug)]
@@ -16,23 +16,10 @@ pub struct Privacy {
     pub receipt: bool
 }
 
+#[test]
 pub fn main() {
-    let test = Privacy {
-        member_type: "individual".to_string(),
-        name: "lacuna".to_string(),
-        sex: "female".to_string(),
-        birth_day: 16,
-        birth_month: 2,
-        birth_year: 2002,
-        phone_number: "000-0000-0000".to_string(),
-        e_mail: "00000@naver.com".to_string(),
-        zip_code: 101010,
-        address: "000-000".to_string(),
-        receipt: true
-    };
-    let privacy_arr:[Privacy; 1] = [test];
-    println!("{:?}", privacy_arr);
+    let privacy_vec: Vec<Privacy> = Vec::new();
+    let num = rand::thread_rng().gen_range(1..101);
+    println!("{:?}", num);
+    
 }
-
-// rand 계속 에러남
-// for문 돌려서 임의의 privacy 생성 예정
