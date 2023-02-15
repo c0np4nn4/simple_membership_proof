@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 rand = "0.8.5"
+pad = "0.1.6"
 
 ark-crypto-primitives = { version = "^0.3.0", default-features = true, features = [ "r1cs" ] }
 ark-r1cs-std = { version = "^0.3.0", default-features = false }
