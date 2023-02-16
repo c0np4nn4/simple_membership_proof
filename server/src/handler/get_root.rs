@@ -5,12 +5,12 @@ use hyper::StatusCode;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
-struct GetTreeRequest {
+struct GetRootRequest {
     account_id: u8,
 }
 
-pub async fn get_tree(mut ctx: Context) -> Response {
-    let body: GetTreeRequest = match ctx.body_json().await {
+pub async fn get_root(mut ctx: Context) -> Response {
+    let body: GetRootRequest = match ctx.body_json().await {
         Ok(v) => v,
         Err(e) => {
             return hyper::Response::builder()
@@ -28,19 +28,10 @@ pub async fn get_tree(mut ctx: Context) -> Response {
 
     let merkle_tree = state_lock.account_merkle_tree.clone();
 
-    let mut paths: Vec<Vec<u8>> = vec![];
+    // let mut paths: Vec<Vec<u8>> = vec![];
+    let root = merkle_tree.root().to_string();
 
-    for i in 0..(TREE_SIZE / 2) {
-        let mut path_bytes: Vec<u8> = vec![];
+    let root = serde_json::to_vec(&root).unwrap();
 
-        let path = merkle_tree.generate_proof(i as usize).unwrap();
-
-        path.serialize_unchecked(&mut path_bytes).unwrap();
-
-        paths.push(path_bytes);
-    }
-
-    let paths = serde_json::to_string(&paths).unwrap();
-
-    Response::new(paths.into())
+    Response::new(root.into())
 }

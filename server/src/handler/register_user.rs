@@ -33,7 +33,7 @@ pub async fn register_user(mut ctx: Context) -> Response {
     let mut state_lock = state.try_lock().unwrap();
 
     if state_lock.next_available_account.unwrap() == AccountId(TREE_SIZE / 2) {
-        return Response::new(format!("[-] Overflow Detected (Maximum: 32)\n").into());
+        return Response::new(format!("[-] Overflow Detected (Maximum: {})\n", TREE_SIZE).into());
     }
 
     let mut rng = test_rng();

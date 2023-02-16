@@ -115,11 +115,12 @@ fn merkle_tree_groht16() {
         Groth16::<Bls12_381>::circuit_specific_setup(circuit_for_key_gen, &mut rng).unwrap();
 
     let circuit = build_my_circuit(20, 1);
+
     let public_input = [circuit.root];
+    let proof = Groth16::prove(&pk, circuit, &mut rng).unwrap();
 
     // --------------------------
 
-    let proof = Groth16::prove(&pk, circuit, &mut rng).unwrap();
     let valid_proof = Groth16::verify(&vk, &public_input, &proof).unwrap();
 
     println!("valid: {:?}", valid_proof);

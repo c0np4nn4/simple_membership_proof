@@ -9,7 +9,7 @@ struct GetTreeRequest {
     account_id: u8,
 }
 
-pub async fn get_tree(mut ctx: Context) -> Response {
+pub async fn get_hash_params(mut ctx: Context) -> Response {
     let body: GetTreeRequest = match ctx.body_json().await {
         Ok(v) => v,
         Err(e) => {
@@ -26,21 +26,15 @@ pub async fn get_tree(mut ctx: Context) -> Response {
     let acc_id = AccountId(body.account_id);
     let state_lock = state.lock().unwrap();
 
-    let merkle_tree = state_lock.account_merkle_tree.clone();
+    let mut hash_params: Vec<String> = Vec::default();
 
-    let mut paths: Vec<Vec<u8>> = vec![];
+    hash_params.push(format!("{:?}", state_lock.leaf_crh_params));
 
-    for i in 0..(TREE_SIZE / 2) {
-        let mut path_bytes: Vec<u8> = vec![];
+    hash_params.push(format!("{:?}", state_lock.two_to_one_crh_params));
 
-        let path = merkle_tree.generate_proof(i as usize).unwrap();
+    // println!("hash_params: {:?}", hash_params);
 
-        path.serialize_unchecked(&mut path_bytes).unwrap();
+    let hash_params = serde_json::to_string(&hash_params).unwrap();
 
-        paths.push(path_bytes);
-    }
-
-    let paths = serde_json::to_string(&paths).unwrap();
-
-    Response::new(paths.into())
+    Response::new(hash_params.into())
 }

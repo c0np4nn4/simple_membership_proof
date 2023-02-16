@@ -5,12 +5,10 @@ use tui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{
-        Block, BorderType, Borders, Cell, Gauge, List, ListItem, ListState, Paragraph, Row, Table,
-    },
+    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
     Frame,
 };
-use tui_logger::{TuiLoggerLevelOutput, TuiLoggerSmartWidget, TuiLoggerWidget};
+use tui_logger::{TuiLoggerLevelOutput, TuiLoggerWidget};
 
 use crate::ReqItem;
 
@@ -61,17 +59,30 @@ pub fn render_reqs<'a>(
         .borders(Borders::ALL)
         .style(match selected_req_item {
             ReqItem::GET_TREE => Style::default().fg(Color::Cyan),
+            // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::White),
             ReqItem::IS_MEMBER => Style::default().fg(Color::White),
         })
         .title("[1] GET TREE")
+        .border_type(BorderType::Plain);
+
+    let req_get_hash_param = Block::default()
+        .borders(Borders::ALL)
+        .style(match selected_req_item {
+            ReqItem::GET_TREE => Style::default().fg(Color::White),
+            // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::Cyan),
+            ReqItem::IS_MEMBER => Style::default().fg(Color::White),
+        })
+        .title("[2] GET HASH PARAM")
         .border_type(BorderType::Plain);
 
     let req_is_member = Block::default()
         .borders(Borders::ALL)
         .style(match selected_req_item {
             ReqItem::GET_TREE => Style::default().fg(Color::White),
+            // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::White),
             ReqItem::IS_MEMBER => Style::default().fg(Color::Cyan),
         })
+        // .title("[3] IS MEMBER")
         .title("[2] IS MEMBER")
         .border_type(BorderType::Thick);
 
@@ -86,6 +97,7 @@ pub fn render_reqs<'a>(
         .add_modifier(Modifier::BOLD);
 
     let descript_GT = vec![ListItem::new("This is Get Tree Request")];
+    // let descript_GP = vec![ListItem::new("This is Get Hash Param Request")];
     let descript_IM = vec![ListItem::new("This is Is Member Request")];
 
     let list_GT =
@@ -93,29 +105,44 @@ pub fn render_reqs<'a>(
             .block(req_get_tree)
             .highlight_style(match selected_req_item {
                 ReqItem::GET_TREE => selected_style,
+                // ReqItem::GET_HASH_PARAM => default_style,
                 ReqItem::IS_MEMBER => default_style,
             });
+
+    // let list_GP = List::new(descript_GP)
+    //     .block(req_get_hash_param)
+    //     .highlight_style(match selected_req_item {
+    //         ReqItem::GET_TREE => default_style,
+    //         ReqItem::GET_HASH_PARAM => selected_style,
+    //         ReqItem::IS_MEMBER => default_style,
+    //     });
 
     let list_IM =
         List::new(descript_IM)
             .block(req_is_member)
             .highlight_style(match selected_req_item {
-                ReqItem::GET_TREE => Style::default()
-                    .bg(Color::Yellow)
-                    .fg(Color::LightBlue)
-                    .add_modifier(Modifier::BOLD),
-                ReqItem::IS_MEMBER => Style::default()
-                    .bg(Color::Yellow)
-                    .fg(Color::Black)
-                    .add_modifier(Modifier::BOLD),
+                ReqItem::GET_TREE => default_style,
+                // ReqItem::GET_HASH_PARAM => default_style,
+                ReqItem::IS_MEMBER => selected_style,
             });
 
     let upper_layout = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+        .constraints(
+            [
+                // Constraint::Percentage(33),
+                // Constraint::Percentage(33),
+                // Constraint::Percentage(33),
+                Constraint::Percentage(50),
+                Constraint::Percentage(50),
+            ]
+            .as_ref(),
+        )
         .split(req_layout[0]);
 
     rect.render_widget(list_GT, upper_layout[0]);
+    // rect.render_widget(list_GP, upper_layout[1]);
+    // rect.render_widget(list_IM, upper_layout[2]);
     rect.render_widget(list_IM, upper_layout[1]);
 
     let req_result = render_log();

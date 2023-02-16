@@ -1,15 +1,13 @@
-use chrono::{DateTime, Utc};
-use rand::{distributions::Alphanumeric, Rng};
+use crate::payment::ledger::{MerkleConfig, Parameters};
+use ark_crypto_primitives::MerkleTree;
+use ark_std::test_rng;
 use serde::{Deserialize, Serialize};
-use std::fs;
 use thiserror::Error;
-use tui::widgets::ListState;
 
-use bytes::Bytes;
-use http_body_util::{BodyExt, Empty};
-use hyper::Request;
-use tokio::io::{self, AsyncWriteExt as _};
-use tokio::net::TcpStream;
+#[cfg(feature = "r1cs")]
+mod circuit;
+#[cfg(feature = "r1cs")]
+mod proof;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Req<T: Serialize + Clone> {
@@ -26,43 +24,19 @@ pub enum ClientError {
     ParseDBError(#[from] serde_json::Error),
 }
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+pub fn make_tree() -> MerkleTree<MerkleConfig> {
+    let mut rng = test_rng();
+    let pp = Parameters::sample(&mut rng);
 
-pub async fn fetch_url(url: hyper::Uri) -> Result<()> {
-    let host = url.host().expect("uri has no host");
-    let port = url.port_u16().unwrap_or(80);
-    let addr = format!("{}:{}", host, port);
-    let stream = TcpStream::connect(addr).await?;
+    let num = 32usize;
+    let height = ark_std::log2(num);
 
-    let (mut sender, conn) = hyper::client::conn::http1::handshake(stream).await?;
-    tokio::task::spawn(async move {
-        if let Err(err) = conn.await {
-            println!("Connection failed: {:?}", err);
-        }
-    });
+    let merkle_tree = MerkleTree::blank(
+        &pp.leaf_crh_params,
+        &pp.two_to_one_crh_params,
+        height as usize,
+    )
+    .unwrap();
 
-    let authority = url.authority().unwrap().clone();
-
-    let req = Request::builder()
-        .uri(url)
-        .method("GET")
-        .header(hyper::header::HOST, authority.as_str())
-        .body("{\"account_id\": 1}".to_string())?;
-
-    let mut res = sender.send_request(req).await?;
-
-    log::info!(" Response: {}", res.status());
-    log::info!(" Headers: {:#?}\n", res.headers());
-    log::info!(" Body: {:#?}\n", res.body());
-
-    while let Some(next) = res.frame().await {
-        let frame = next?;
-        if let Some(chunk) = frame.data_ref() {
-            io::stdout().write_all(&chunk).await?;
-        }
-    }
-
-    log::info!(" fetch_url Done!");
-
-    Ok(())
+    merkle_tree
 }

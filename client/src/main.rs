@@ -1,9 +1,8 @@
-use chrono::prelude::*;
 use crossterm::{
     event::{self, Event as CEvent, KeyCode},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
-use serde::{Deserialize, Serialize};
+use payment::ledger::Parameters;
 use std::io;
 use std::sync::mpsc;
 use std::thread;
@@ -13,17 +12,18 @@ use tui::{
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{Block, BorderType, Borders, ListState, Paragraph, Row, Table, Tabs},
+    widgets::{Block, BorderType, Borders, Paragraph, Tabs},
     Terminal,
 };
-use ui::{render_home, render_reqs};
-use utils::fetch_url;
-// use utils::{add_random_pet_to_db, read_db, remove_pet_at_index};
 
+use rpc_request::{get_hash_params::get_hash_params, get_root::get_root, get_tree::get_tree};
+use ui::{render_home, render_reqs};
+use utils::make_tree;
+
+mod payment;
+mod rpc_request;
 mod ui;
 mod utils;
-
-const DB_PATH: &str = "./data/db.json";
 
 enum Event<I> {
     Input(I),
@@ -48,6 +48,7 @@ impl From<MenuItem> for usize {
 #[derive(Copy, Clone, Debug)]
 pub enum ReqItem {
     GET_TREE,
+    // GET_HASH_PARAM,
     IS_MEMBER,
 }
 
@@ -55,7 +56,8 @@ impl From<ReqItem> for usize {
     fn from(input: ReqItem) -> usize {
         match input {
             ReqItem::GET_TREE => 0,
-            ReqItem::IS_MEMBER => 1,
+            // ReqItem::GET_HASH_PARAM => 1,
+            ReqItem::IS_MEMBER => 2,
         }
     }
 }
@@ -64,7 +66,7 @@ impl From<ReqItem> for usize {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode().expect("can run in raw mode");
     tui_logger::init_logger(log::LevelFilter::Trace).unwrap();
-    tui_logger::set_default_level(log::LevelFilter::Debug);
+    tui_logger::set_default_level(log::LevelFilter::Info);
 
     let (tx, rx) = mpsc::channel();
     let tick_rate = Duration::from_millis(200);
@@ -96,8 +98,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let menu_titles = vec!["Home", "Requests"];
     let mut active_menu_item = MenuItem::Home;
-
     let mut selected_req_item = ReqItem::GET_TREE;
+
+    let mut path_data: Vec<Vec<u8>> = Vec::default();
+    let mut root_data: Vec<u8> = Vec::default();
 
     loop {
         terminal.draw(|rect| {
@@ -183,6 +187,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     log::info!(" Request `Get Tree`");
                 }
 
+                // KeyCode::Char('2') => {
+                //     selected_req_item = ReqItem::GET_HASH_PARAM;
+                //     log::info!(" Request `Get Hash Param`");
+                // }
+                // KeyCode::Char('3') => {
+                //     selected_req_item = ReqItem::IS_MEMBER;
+                //     log::info!(" Request `Is Member`");
+                // }
                 KeyCode::Char('2') => {
                     selected_req_item = ReqItem::IS_MEMBER;
                     log::info!(" Request `Is Member`");
@@ -190,15 +202,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 KeyCode::Enter => match selected_req_item {
                     ReqItem::GET_TREE => {
-                        let mut url = String::from("http://127.0.0.1:8080");
-                        let cmd_register_user = "/get_tree";
-                        url += cmd_register_user;
+                        let mut url = String::from("http://127.0.0.1:8080/get_tree");
+                        let url = url.parse::<hyper::Uri>().unwrap();
+                        path_data = get_tree(url).await.unwrap();
+
+                        let mut url = String::from("http://127.0.0.1:8080/get_root");
+                        let url = url.parse::<hyper::Uri>().unwrap();
+                        root_data = get_root(url).await.unwrap();
+                    }
+                    // ReqItem::GET_HASH_PARAM => {
+                    //     let mut url = String::from("http://127.0.0.1:8080/get_hash_params");
+                    //     let url = url.parse::<hyper::Uri>().unwrap();
+                    //     hash_params_data = get_hash_params(url).await.unwrap();
+                    // }
+                    ReqItem::IS_MEMBER => {
+                        log::warn!("generating proof...");
+                        let merkle_tree = make_tree();
+
+                        log::info!("root: {:?}", merkle_tree.root());
+
+                        log::error!("make tree!");
+
+                        let mut url = String::from("http://127.0.0.1:8080/is_member");
 
                         let url = url.parse::<hyper::Uri>().unwrap();
 
-                        fetch_url(url).await;
-                    }
-                    ReqItem::IS_MEMBER => {
                         log::info!(" not implemented yet!")
                     }
                 },

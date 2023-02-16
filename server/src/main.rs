@@ -1,6 +1,6 @@
 use ark_std::test_rng;
 use bytes::Bytes;
-use handler::{add_balance, get_balance, get_tree, put_message, register_user};
+use handler::{add_balance, get_balance, get_hash_params, get_tree, put_message, register_user};
 use hyper::{
     body::to_bytes,
     service::{make_service_fn, service_fn},
@@ -79,10 +79,9 @@ pub const TREE_SIZE: u8 = 8;
 
 #[tokio::main]
 async fn main() {
-    //
     let mut rng = test_rng();
     let pp = Parameters::sample(&mut rng);
-    let mut state = State::new(32, &pp);
+    let mut state = State::new(32, pp.clone());
 
     for i in 0..15 {
         let (id, pk, sk) = state.sample_keys_and_register(&pp, &mut rng).unwrap();
@@ -100,11 +99,11 @@ async fn main() {
 
     let runtime_state = Arc::new(Mutex::new(state));
 
-    //
     let mut router: Router = Router::new();
 
     // get
     router.get("/get_tree", Box::new(get_tree));
+    router.get("/get_hash_params", Box::new(get_hash_params));
     router.get("/get_balance", Box::new(get_balance));
 
     // post
