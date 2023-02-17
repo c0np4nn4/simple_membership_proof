@@ -37,16 +37,16 @@ pub async fn get_root(url: hyper::Uri) -> Result<Vec<u8>> {
         let frame = next?;
         if let Some(chunk) = frame.data_ref() {
             b = chunk.clone();
-            log::info!("b: {:?}", b);
+            log::info!("b: {:?}", b.to_vec());
         }
     }
 
-    // let root: Vec<u8> = serde_json::from_slice(&b).unwrap();
+    let root: Vec<u8> = b.to_vec();
 
-    // log::info!(" root [0..16]: {:2x?}", &root[0..16]);
+    log::info!(" root [0..16]: {:2x?}", &root[0..16]);
 
     log::info!(" get_root done!");
 
-    // Ok(root)
-    Ok(vec![])
+    Ok(root)
+    // Ok(vec![])
 }

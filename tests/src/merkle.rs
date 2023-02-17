@@ -127,3 +127,4 @@ fn merkle_tree_groht16() {
 
     assert!(valid_proof)
 }
+

@@ -16,7 +16,7 @@ use tui::{
     Terminal,
 };
 
-use rpc_request::{get_hash_params::get_hash_params, get_root::get_root, get_tree::get_tree};
+use rpc_request::{get_root::get_root, get_tree::get_tree, send_proof::send_proof};
 use ui::{render_home, render_reqs};
 use utils::make_tree;
 
@@ -101,7 +101,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut selected_req_item = ReqItem::GET_TREE;
 
     let mut path_data: Vec<Vec<u8>> = Vec::default();
-    let mut root_data: Vec<u8> = Vec::default();
+    // let mut root_data: Vec<u8> = Vec::default();
+    let mut root_data: Vec<u8> = vec![1, 2, 3, 4];
 
     loop {
         terminal.draw(|rect| {
@@ -157,7 +158,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             rect.render_widget(tabs, chunks[0]);
 
             match active_menu_item {
-                MenuItem::Home => rect.render_widget(render_home(), chunks[1]),
+                MenuItem::Home => {
+                    rect.render_widget(
+                        render_home(
+                            // for check
+                            //
+                            // &mut root_data,
+                            // &path_data,
+                        ),
+                        chunks[1],
+                    )
+                }
                 MenuItem::Request => {
                     let req_layout = Layout::default()
                         .direction(Direction::Vertical)
@@ -216,18 +227,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     //     hash_params_data = get_hash_params(url).await.unwrap();
                     // }
                     ReqItem::IS_MEMBER => {
-                        log::warn!("generating proof...");
-                        let merkle_tree = make_tree();
+                        log::warn!("[!] generating proof...");
+                        // let merkle_tree = make_tree();
+                        // log::info!("[+] tree has been constructed!");
+                        log::info!("[+] root[0..16]: {:?}", &root_data[0..16]);
 
-                        log::info!("root: {:?}", merkle_tree.root());
-
-                        log::error!("make tree!");
-
-                        let mut url = String::from("http://127.0.0.1:8080/is_member");
-
+                        let mut url = String::from("http://127.0.0.1:8080/send_proof");
                         let url = url.parse::<hyper::Uri>().unwrap();
+                        match send_proof(url, &path_data, &root_data).await {
+                            Ok(res) => {
+                                log::info!("gen proof done!, res: {:?}", res);
+                            }
+                            Err(e) => {
+                                log::error!("Error: {:?}", e);
+                            }
+                        };
 
-                        log::info!(" not implemented yet!")
+                        log::error!(" not implemented yet!")
                     }
                 },
                 _ => {}

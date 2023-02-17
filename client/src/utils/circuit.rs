@@ -8,6 +8,7 @@ use ark_crypto_primitives::crh::{
     pedersen,
 };
 use ark_crypto_primitives::merkle_tree::{Config, MerkleTree, Path};
+use ark_crypto_primitives::CRH;
 use ark_ed_on_bls12_381::{constraints::EdwardsVar, EdwardsProjective};
 
 pub type TwoToOneHash = PedersenCRHCompressor<EdwardsProjective, TECompressor, TwoToOneWindow>;
@@ -79,8 +80,7 @@ use ark_std::rand::rngs::StdRng;
 pub type RootVar = <TwoToOneHashGadget as TwoToOneCRHGadget<TwoToOneHash, ConstraintF>>::OutputVar;
 
 /// The R1CS equivalent of the the Merkle tree path.
-pub type SimplePathVar =
-    PathVar<crate::MerkleConfig, LeafHashGadget, TwoToOneHashGadget, ConstraintF>;
+pub type SimplePathVar = PathVar<MerkleConfig, LeafHashGadget, TwoToOneHashGadget, ConstraintF>;
 
 ////////////////////////////////////////////////////////////////////////////////
 

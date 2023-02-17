@@ -4,10 +4,8 @@ use ark_std::test_rng;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-#[cfg(feature = "r1cs")]
-mod circuit;
-#[cfg(feature = "r1cs")]
-mod proof;
+pub(crate) mod circuit;
+pub(crate) mod proof;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Req<T: Serialize + Clone> {

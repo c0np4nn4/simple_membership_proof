@@ -14,7 +14,10 @@ use crate::ReqItem;
 
 // use crate::utils::{read_db, Request};
 
-pub fn render_home<'a>() -> Paragraph<'a> {
+pub fn render_home<'a>(//
+    // root: &mut Vec<u8>,
+    // path: &Vec<Vec<u8>>,
+) -> Paragraph<'a> {
     let home = Paragraph::new(vec![
         Spans::from(vec![Span::raw("")]),
         Spans::from(vec![Span::raw(" ")]),
@@ -38,6 +41,11 @@ pub fn render_home<'a>() -> Paragraph<'a> {
         ]),
         Spans::from(vec![Span::raw("")]),
         Spans::from(vec![Span::raw("Press 'r' to access Request page")]),
+        // Spans::from(vec![Span::raw("")]),
+        // Spans::from(vec![Span::raw("")]),
+        // Spans::from(vec![Span::raw(format!("path: {:?}", path))]),
+        // Spans::from(vec![Span::raw("")]),
+        // Spans::from(vec![Span::raw(format!("root: {:?}", root))]),
     ])
     .alignment(Alignment::Center)
     .block(

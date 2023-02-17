@@ -1,7 +1,11 @@
 use ark_std::test_rng;
 use bytes::Bytes;
 use handler::{
-    add_balance, get_balance, get_hash_params, get_root, get_tree, put_message, register_user,
+    // add_balance, get_balance, get_hash_params,
+    // put_message, register_user,
+    get_root,
+    get_tree,
+    send_proof,
 };
 use hyper::{
     body::to_bytes,
@@ -110,9 +114,11 @@ async fn main() {
     // router.get("/get_balance", Box::new(get_balance));
 
     // post
-    router.post("/add_balance", Box::new(add_balance));
-    router.post("/register_user", Box::new(register_user));
-    router.post("/put_message", Box::new(put_message));
+    // router.post("/add_balance", Box::new(add_balance));
+    // router.post("/register_user", Box::new(register_user));
+    // router.post("/put_message", Box::new(put_message));
+    //
+    router.post("/send_proof", Box::new(send_proof));
 
     let shared_router = Arc::new(router);
 
@@ -147,8 +153,6 @@ async fn route(
     println!("[!] route has been invoked!, req: {:?}", req);
 
     let found_handler = router.route(req.uri().path(), req.method());
-
-    println!("[!] route, found_handler: {:?}", found_handler.params);
 
     let resp = found_handler
         .handler

@@ -1,7 +1,7 @@
 use ark_bls12_381::{Bls12_381, Parameters};
 use ark_crypto_primitives::{crh::TwoToOneCRH, Path, CRH};
 use ark_ec::bls12::Bls12;
-use ark_groth16::{Groth16, Proof};
+use ark_groth16::{Groth16, Proof, VerifyingKey};
 use ark_snark::SNARK;
 
 use super::circuit::{LeafHash, MerkleConfig, MyCircuit, Root, TwoToOneHash};
@@ -31,22 +31,28 @@ fn build_my_circuit(
     }
 }
 
-pub fn gen_proof(
+pub fn gen_proof_and_vk(
     //
     leaf: u8,
     root: Root,
     path: Path<MerkleConfig>,
-) -> Proof<Bls12<Parameters>> {
-    let circuit_for_key_gen = build_my_circuit(leaf, root, path);
+    // ) -> (Proof<Bls12<Parameters>>, VerifyingKey<Bls12<Parameters>>) {
+) -> () {
+    log::warn!("[!] generating proof and VerifyingKey...");
+
+    let circuit_for_key_gen = build_my_circuit(leaf, root, path.clone());
 
     let mut rng = ark_std::test_rng();
 
     let (pk, vk) =
         Groth16::<Bls12_381>::circuit_specific_setup(circuit_for_key_gen, &mut rng).unwrap();
 
-    let circuit = build_my_circuit(leaf, root, path);
+    // log::warn!("vk: {:?}", vk);
 
-    let proof = Groth16::prove(&pk, circuit, &mut rng).unwrap();
+    // let circuit = build_my_circuit(leaf, root, path);
 
-    proof
+    // let proof = Groth16::prove(&pk, circuit, &mut rng).unwrap();
+
+    // (proof, vk)
+    ()
 }
