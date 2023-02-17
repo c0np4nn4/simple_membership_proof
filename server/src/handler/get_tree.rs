@@ -35,7 +35,7 @@ pub async fn get_tree(mut ctx: Context) -> Response {
 
         let path = merkle_tree.generate_proof(i as usize).unwrap();
 
-        path.serialize_unchecked(&mut path_bytes).unwrap();
+        path.serialize(&mut path_bytes).unwrap();
 
         paths.push(path_bytes);
     }

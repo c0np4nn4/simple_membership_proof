@@ -1,6 +1,8 @@
 use ark_std::test_rng;
 use bytes::Bytes;
-use handler::{add_balance, get_balance, get_hash_params, get_tree, put_message, register_user};
+use handler::{
+    add_balance, get_balance, get_hash_params, get_root, get_tree, put_message, register_user,
+};
 use hyper::{
     body::to_bytes,
     service::{make_service_fn, service_fn},
@@ -95,7 +97,7 @@ async fn main() {
         acc_info.serialize();
     }
 
-    println!("state size: {:?}", state.account_merkle_tree.height());
+    // println!("state size: {:?}", state.account_merkle_tree.height());
 
     let runtime_state = Arc::new(Mutex::new(state));
 
@@ -103,8 +105,9 @@ async fn main() {
 
     // get
     router.get("/get_tree", Box::new(get_tree));
-    router.get("/get_hash_params", Box::new(get_hash_params));
-    router.get("/get_balance", Box::new(get_balance));
+    router.get("/get_root", Box::new(get_root));
+    // router.get("/get_hash_params", Box::new(get_hash_params));
+    // router.get("/get_balance", Box::new(get_balance));
 
     // post
     router.post("/add_balance", Box::new(add_balance));
@@ -112,12 +115,14 @@ async fn main() {
     router.post("/put_message", Box::new(put_message));
 
     let shared_router = Arc::new(router);
+
     let new_service = make_service_fn(move |_| {
         let app_state = AppState {
             state_thing: runtime_state.clone(),
         };
 
         let router_capture = shared_router.clone();
+
         async {
             Ok::<_, Error>(service_fn(move |req| {
                 route(router_capture.clone(), req, app_state.clone())
@@ -126,8 +131,11 @@ async fn main() {
     });
 
     let addr = "127.0.0.1:8080".parse().expect("address creation works");
+
     let server = Server::bind(&addr).serve(new_service);
+
     println!("Listening on http://{}", addr);
+
     let _ = server.await;
 }
 
@@ -139,9 +147,18 @@ async fn route(
     println!("[!] route has been invoked!, req: {:?}", req);
 
     let found_handler = router.route(req.uri().path(), req.method());
+
+    println!("[!] route, found_handler: {:?}", found_handler.params);
+
     let resp = found_handler
         .handler
-        .invoke(Context::new(app_state, req, found_handler.params))
+        .invoke(Context::new(
+            //
+            app_state,
+            req,
+            found_handler.params,
+        ))
         .await;
+
     Ok(resp)
 }

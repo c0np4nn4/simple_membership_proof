@@ -23,15 +23,15 @@ pub async fn get_root(mut ctx: Context) -> Response {
     println!("body: {:#?}", body);
 
     let state = ctx.state.state_thing;
-    let acc_id = AccountId(body.account_id);
+    let _acc_id = AccountId(body.account_id);
     let state_lock = state.lock().unwrap();
 
     let merkle_tree = state_lock.account_merkle_tree.clone();
+    let mut root_vec = Vec::default();
 
-    // let mut paths: Vec<Vec<u8>> = vec![];
-    let root = merkle_tree.root().to_string();
+    merkle_tree.root().0.serialize(&mut root_vec).unwrap();
 
-    let root = serde_json::to_vec(&root).unwrap();
+    println!("root: {:?}", root_vec);
 
-    Response::new(root.into())
+    Response::new(root_vec.into())
 }

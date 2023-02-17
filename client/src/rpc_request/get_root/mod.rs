@@ -7,11 +7,15 @@ use tokio::net::TcpStream;
 
 pub async fn get_root(url: hyper::Uri) -> Result<Vec<u8>> {
     let host = url.host().expect("uri has no host");
+
     let port = url.port_u16().unwrap_or(80);
+
     let addr = format!("{}:{}", host, port);
+
     let stream = TcpStream::connect(addr).await?;
 
     let (mut sender, conn) = hyper::client::conn::http1::handshake(stream).await?;
+
     tokio::task::spawn(async move {
         if let Err(err) = conn.await {
             println!("Connection failed: {:?}", err);
