@@ -1,7 +1,9 @@
 use ark_crypto_primitives::crh::TwoToOneCRH;
 use ark_crypto_primitives::merkle_tree::{Config, MerkleTree, Path};
+use rand::Rng;
 
 pub mod common;
+pub mod merkle_tree;
 use common::*;
 
 mod merkle;

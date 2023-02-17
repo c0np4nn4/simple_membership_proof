@@ -4,6 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+rand = "0.8.5"
+pad = "0.1.6"
+
+sha2 = "0.10.6"
+byteorder = "1.4.3"
+
 ark-crypto-primitives = { version = "^0.3.0", default-features = true, features = [ "r1cs" ] }
 ark-r1cs-std = { version = "^0.3.0", default-features = false }
 ark-relations = { version = "^0.3.0", default-features = false  }
@@ -16,3 +22,6 @@ tracing-subscriber = { version = "0.2" }
 ark-bls12-381 = { version = "^0.3.0" }
 ark-snark = { version = "^0.3.0", default-features = false }
 ark-groth16 = { version = "^0.3.0" }
+
+serde = {version = "1.0", features = ["derive"] }
+serde_json = "1.0"
