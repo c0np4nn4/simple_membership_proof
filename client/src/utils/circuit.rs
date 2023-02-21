@@ -1,13 +1,14 @@
+use ark_crypto_primitives::crh::constraints::{CRHGadget, TwoToOneCRHGadget};
 use ark_crypto_primitives::crh::injective_map::constraints::{
     PedersenCRHCompressorGadget, TECompressorGadget,
 };
+use ark_crypto_primitives::crh::TwoToOneCRH;
 use ark_crypto_primitives::crh::{
     injective_map::{PedersenCRHCompressor, TECompressor},
     pedersen,
 };
-use ark_crypto_primitives::crh::{TwoToOneCRH, TwoToOneCRHGadget};
 use ark_crypto_primitives::merkle_tree::{Config, MerkleTree, Path};
-use ark_crypto_primitives::{CRHGadget, CRH};
+use ark_crypto_primitives::CRH;
 use ark_ed_on_bls12_381::{constraints::EdwardsVar, EdwardsProjective};
 
 pub type TwoToOneHash = PedersenCRHCompressor<EdwardsProjective, TECompressor, TwoToOneWindow>;
@@ -63,7 +64,7 @@ impl Config for MerkleConfig {
 }
 
 /// A Merkle tree containing account information.
-// pub type SimpleMerkleTree = MerkleTree<MerkleConfig>;
+pub type SimpleMerkleTree = MerkleTree<MerkleConfig>;
 /// The root of the account Merkle tree.
 pub type Root = <TwoToOneHash as TwoToOneCRH>::Output;
 /// A membership proof for a given account.
@@ -73,7 +74,7 @@ use ark_crypto_primitives::merkle_tree::constraints::PathVar;
 use ark_r1cs_std::prelude::*;
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 
-// use ark_std::rand::rngs::StdRng;
+use ark_std::rand::rngs::StdRng;
 
 /// The R1CS equivalent of the the Merkle tree root.
 pub type RootVar = <TwoToOneHashGadget as TwoToOneCRHGadget<TwoToOneHash, ConstraintF>>::OutputVar;

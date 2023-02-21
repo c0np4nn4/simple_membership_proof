@@ -11,7 +11,6 @@ use route_recognizer::Params;
 use router::Router;
 use std::sync::{Arc, Mutex};
 
-mod circuit;
 mod handler;
 mod payment;
 mod router;

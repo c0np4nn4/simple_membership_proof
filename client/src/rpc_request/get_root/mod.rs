@@ -43,7 +43,7 @@ pub async fn get_root(url: hyper::Uri) -> Result<Vec<u8>> {
 
     let root: Vec<u8> = b.to_vec();
 
-    log::info!(" root [0..8]: {:2x?}", root);
+    // log::info!(" root [0..8]: {:2x?}", &root[0..8]);
 
     log::info!(" get_root done!");
 

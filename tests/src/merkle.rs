@@ -117,7 +117,6 @@ fn merkle_tree_groht16() {
     let circuit = build_my_circuit(20, 1);
 
     let public_input = [circuit.root];
-
     let proof = Groth16::prove(&pk, circuit, &mut rng).unwrap();
 
     // --------------------------
@@ -128,3 +127,4 @@ fn merkle_tree_groht16() {
 
     assert!(valid_proof)
 }
+
