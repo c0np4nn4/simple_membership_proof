@@ -40,6 +40,12 @@ pub async fn get_path(mut ctx: Context) -> Response {
 
         path.serialize(&mut path_bytes).unwrap();
 
+        println!(
+            "path byte check[{}]: {:02x?}",
+            i,
+            &path_bytes.as_slice()[0..8]
+        );
+
         // for test
         {
             let tmp = Path::<MerkleConfig>::deserialize(path_bytes.as_slice()).unwrap();

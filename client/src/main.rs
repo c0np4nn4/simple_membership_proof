@@ -102,7 +102,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut active_menu_item = MenuItem::Home;
     let mut selected_req_item = ReqItem::GET_PATH;
 
-    let mut path_data: Vec<Vec<u8>> = Vec::default();
+    let mut path_data: Vec<Vec<u8>> = Vec::new();
     // let mut root_data: Vec<u8> = Vec::default();
     let mut root_data: Vec<u8> = vec![1, 2, 3, 4];
 
@@ -223,16 +223,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let url = url.parse::<hyper::Uri>().unwrap();
                         root_data = get_root(url).await.unwrap();
                     }
-                    // ReqItem::GET_HASH_PARAM => {
-                    //     let mut url = String::from("http://127.0.0.1:8080/get_hash_params");
-                    //     let url = url.parse::<hyper::Uri>().unwrap();
-                    //     hash_params_data = get_hash_params(url).await.unwrap();
-                    // }
+
                     ReqItem::IS_MEMBER => {
                         log::warn!("[!] generating proof...");
-                        // let merkle_tree = make_tree();
-                        // log::info!("[+] tree has been constructed!");
-                        log::info!("[+] root[0..16]: {:?}", &root_data[0..16]);
 
                         let mut url = String::from("http://127.0.0.1:8080/send_proof");
 
@@ -240,14 +233,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                         match send_proof(url, &path_data, &root_data).await {
                             Ok(res) => {
-                                log::warn!("gen proof done!, res: {:?}", res);
+                                log::warn!("gen proof done!");
                             }
                             Err(e) => {
                                 log::error!("Error: {:?}", e);
                             }
                         };
-
-                        log::error!(" not implemented yet!")
                     }
                 },
                 _ => {}

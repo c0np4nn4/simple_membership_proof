@@ -23,11 +23,11 @@ fn convert_u64_array_to_u8_vec(array_u64: [u64; 4]) -> Vec<u8> {
 
     for i in 0..4 {
         let a = array_u64[i];
-        println!("a: {:016x?}", a);
+        // println!("a: {:016x?}", a);
 
         for j in 0..8 {
             let b: u8 = (((a & mask[j]) >> (8 * (7 - j))) & 0xff) as u8;
-            println!("\tb: {:02x?}", b);
+            // println!("\tb: {:02x?}", b);
             //
             res.push(b);
         }

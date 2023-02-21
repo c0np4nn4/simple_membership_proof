@@ -37,8 +37,7 @@ pub fn gen_proof_and_vk(
     leaf: u8,
     root: Root,
     path: Path<MerkleConfig>,
-    // ) -> (Proof<Bls12<Parameters>>, VerifyingKey<Bls12<Parameters>>) {
-) -> () {
+) -> (Vec<u8>, Vec<u8>) {
     log::warn!("[!] generating proof and VerifyingKey...");
 
     let circuit_for_key_gen = build_my_circuit(leaf, root, path.clone());
@@ -48,22 +47,25 @@ pub fn gen_proof_and_vk(
     let (pk, vk) =
         Groth16::<Bls12_381>::circuit_specific_setup(circuit_for_key_gen, &mut rng).unwrap();
 
-    log::warn!("vk: {:?}", vk);
-
     let mut ser_vk = Vec::<u8>::default();
 
-    vk.serialize_unchecked(&mut ser_vk).unwrap();
+    vk.serialize(&mut ser_vk).unwrap();
 
     let circuit = build_my_circuit(leaf, root, path);
 
-    let proof = Groth16::prove(&pk, circuit, &mut rng).unwrap();
+    let proof = Groth16::<Bls12_381>::prove(&pk, circuit, &mut rng).unwrap();
+
+    // test
+    {
+        let valid_proof = Groth16::verify(&vk, &[root], &proof).unwrap();
+        println!("5656 is it valid?: {:?}", valid_proof);
+    }
 
     let mut ser_proof = Vec::<u8>::default();
 
     proof.serialize(&mut ser_proof).unwrap();
 
-    log::error!("proof: {:?}", ser_proof);
+    log::error!("proof: {:?}", &ser_proof);
 
-    // (proof, vk)
-    ()
+    (ser_vk, ser_proof)
 }

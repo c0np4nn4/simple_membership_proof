@@ -20,7 +20,7 @@ struct SendProofRequest {
     vk: Vec<u8>,
 }
 
-pub async fn send_proof(url: hyper::Uri, path: &Vec<Vec<u8>>, root: &Vec<u8>) -> Result<String> {
+pub async fn send_proof(url: hyper::Uri, path: &Vec<Vec<u8>>, root: &Vec<u8>) -> Result<()> {
     let host = url.host().expect("uri has no host");
     let port = url.port_u16().unwrap_or(80);
     let addr = format!("{}:{}", host, port);
@@ -36,9 +36,12 @@ pub async fn send_proof(url: hyper::Uri, path: &Vec<Vec<u8>>, root: &Vec<u8>) ->
     let authority = url.authority().unwrap().clone();
 
     // for test, leaf == 1 as u8
-    let leaf = 1u8;
+    let leaf = 3u8;
 
-    let root = Root::deserialize(root.as_slice()).unwrap();
+    let ser_root = root.clone();
+
+    let root = convert_u8_vec_to_u64_array(root.clone());
+    let root = Root::new(ark_ff::BigInteger256(root));
 
     log::info!("root: {:?}", root);
 
@@ -52,21 +55,16 @@ pub async fn send_proof(url: hyper::Uri, path: &Vec<Vec<u8>>, root: &Vec<u8>) ->
         paths.push(res);
     }
 
-    gen_proof_and_vk(leaf, root, paths[leaf as usize].clone());
-    // a.serialize_uncompressed(writer)
-    // gen_proof_and_vk(1);
+    let (ser_vk, ser_proof): (Vec<u8>, Vec<u8>) =
+        gen_proof_and_vk(leaf, root, paths[leaf as usize].clone());
 
-    // gen_proof
-    // public_input as root
-    // gen vk
+    let req_body = SendProofRequest {
+        proof: ser_proof,
+        vk: ser_vk,
+        public_input: ser_root,
+    };
 
-    // req body
-
-    let req_body =
-        stringify!({"proof": [1, 2, 3, 4],"public_input": [10, 20, 30, 40],"vk": [5, 6, 7, 8]})
-            .to_string();
-
-    log::info!("[!] req_body: {:#?}", req_body);
+    let req_body = serde_json::to_string(&req_body).unwrap();
 
     let req = Request::builder()
         .uri(url)
@@ -88,14 +86,24 @@ pub async fn send_proof(url: hyper::Uri, path: &Vec<Vec<u8>>, root: &Vec<u8>) ->
         }
     }
 
-    // let hash_params: Vec<String> =
-    //     serde_json::from_slice(&a).unwrap_or(vec!["NO_DATA".to_string()]);
+    Ok(())
+}
 
-    // for i in 0..(hash_params.len()) {
-    //     log::info!(" hash_params[{}] [0..16]: {:?}", i, &hash_params[i]);
-    // }
-    // //
-    // log::info!(" get_hash_params done!");
+fn convert_u8_vec_to_u64_array(vec_u8: Vec<u8>) -> [u64; 4] {
+    let mut res: [u64; 4] = [0x0u64; 4];
 
-    Ok(String::from("not yet"))
+    for i in 0..32 {
+        let idx = i / 8;
+        res[idx] <<= 8;
+        res[idx] ^= vec_u8[i] as u64;
+
+        // println!("[1] vec_u8: {:02x?}", vec_u8[i]);
+        // println!("[2] res: {:016x?}", res[idx]);
+    }
+
+    // println!("[!] check");
+
+    // println!("res: {:?}", res);
+
+    res
 }

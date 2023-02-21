@@ -1,7 +1,17 @@
 use crate::{
-    payment::{account::AccountId, ledger::Parameters},
+    circuit::{MerkleConfig, MyCircuit, Root},
+    payment::{
+        account::AccountId,
+        ledger::{LeafHash, Parameters, TwoToOneHash},
+    },
     Context, Response, TREE_SIZE,
 };
+use ark_bls12_381::Bls12_381;
+use ark_crypto_primitives::{crh::TwoToOneCRH, Path, CRH, SNARK};
+use ark_ec::bls12::Bls12;
+use ark_ff::{Fp256, Fp256Parameters};
+use ark_groth16::{Groth16, Proof, VerifyingKey};
+use ark_serialize::CanonicalDeserialize;
 use ark_std::test_rng;
 use hyper::StatusCode;
 use serde::Deserialize;
@@ -24,19 +34,54 @@ pub async fn send_proof(mut ctx: Context) -> Response {
         }
     };
 
+    println!("[!] proof: {:?}", body.proof);
+    println!("[!] public_input: {:?}", body.public_input);
+    println!("[!] vk: {:?}", body.vk);
+
     let state = ctx.state.state_thing;
     let mut state_lock = state.try_lock().unwrap();
 
-    if state_lock.next_available_account.unwrap() == AccountId(TREE_SIZE as u8 / 2) {
-        return Response::new(format!("[-] Overflow Detected (Maximum: {})\n", TREE_SIZE).into());
-    }
-
     let mut rng = test_rng();
 
-    let pp = Parameters::sample(&mut rng);
+    // let pp = Parameters::sample(&mut rng);
 
-    // encrypt(alice_pk, user_ecc_pk)
-    // encrypt(alice_sk, user_ecc_pk)
+    // --------------------------
+    let proof = Proof::<Bls12_381>::deserialize(body.proof.as_slice()).unwrap();
 
-    Response::new(format!("validation done, not implemented yet").into())
+    // let public_input = Root::deserialize(body.public_input.as_slice()).unwrap();
+
+    let public_input = convert_u8_vec_to_u64_array(body.public_input.clone());
+    let public_input = Root::new(ark_ff::BigInteger256(public_input));
+    // let public_input = state_lock.account_merkle_tree.root();
+    {
+        let tmp = state_lock.account_merkle_tree.root();
+        println!("body.root: ");
+        for b in body.public_input {
+            print!("{:02x?} ", b);
+        }
+        println!("\nstate.merkle_tree.root: {:?}", tmp);
+        println!("req.merkle_tree.root: {:?}", public_input);
+    }
+
+    let vk = VerifyingKey::<Bls12_381>::deserialize(body.vk.as_slice()).unwrap();
+
+    let valid_proof = Groth16::verify(&vk, &[public_input], &proof).unwrap();
+
+    if valid_proof == true {
+        Response::new(format!("validation done, Good").into())
+    } else {
+        Response::new(format!("validation done, Fail").into())
+    }
+}
+
+fn convert_u8_vec_to_u64_array(vec_u8: Vec<u8>) -> [u64; 4] {
+    let mut res: [u64; 4] = [0x0u64; 4];
+
+    for i in 0..32 {
+        let idx = i / 8;
+        res[idx] <<= 8;
+        res[idx] ^= vec_u8[i] as u64;
+    }
+
+    res
 }
