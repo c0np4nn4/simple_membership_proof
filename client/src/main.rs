@@ -16,7 +16,7 @@ use tui::{
     Terminal,
 };
 
-use rpc_request::{get_root::get_root, get_tree::get_tree, send_proof::send_proof};
+use rpc_request::{get_path::get_path, get_root::get_root, send_proof::send_proof};
 use ui::{render_home, render_reqs};
 use utils::make_tree;
 
@@ -47,7 +47,7 @@ impl From<MenuItem> for usize {
 
 #[derive(Copy, Clone, Debug)]
 pub enum ReqItem {
-    GET_TREE,
+    GET_PATH,
     // GET_HASH_PARAM,
     IS_MEMBER,
 }
@@ -55,7 +55,7 @@ pub enum ReqItem {
 impl From<ReqItem> for usize {
     fn from(input: ReqItem) -> usize {
         match input {
-            ReqItem::GET_TREE => 0,
+            ReqItem::GET_PATH => 0,
             // ReqItem::GET_HASH_PARAM => 1,
             ReqItem::IS_MEMBER => 2,
         }
@@ -98,7 +98,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let menu_titles = vec!["Home", "Requests"];
     let mut active_menu_item = MenuItem::Home;
-    let mut selected_req_item = ReqItem::GET_TREE;
+    let mut selected_req_item = ReqItem::GET_PATH;
 
     let mut path_data: Vec<Vec<u8>> = Vec::default();
     // let mut root_data: Vec<u8> = Vec::default();
@@ -194,7 +194,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 KeyCode::Char('r') => active_menu_item = MenuItem::Request,
 
                 KeyCode::Char('1') => {
-                    selected_req_item = ReqItem::GET_TREE;
+                    selected_req_item = ReqItem::GET_PATH;
                     log::info!(" Request `Get Tree`");
                 }
 
@@ -212,10 +212,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
 
                 KeyCode::Enter => match selected_req_item {
-                    ReqItem::GET_TREE => {
-                        let mut url = String::from("http://127.0.0.1:8080/get_tree");
+                    ReqItem::GET_PATH => {
+                        let mut url = String::from("http://127.0.0.1:8080/get_path");
                         let url = url.parse::<hyper::Uri>().unwrap();
-                        path_data = get_tree(url).await.unwrap();
+                        path_data = get_path(url).await.unwrap();
 
                         let mut url = String::from("http://127.0.0.1:8080/get_root");
                         let url = url.parse::<hyper::Uri>().unwrap();

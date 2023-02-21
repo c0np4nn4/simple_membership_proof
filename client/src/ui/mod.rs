@@ -63,10 +63,10 @@ pub fn render_reqs<'a>(
     req_layout: Vec<Rect>,
     selected_req_item: &ReqItem,
 ) {
-    let req_get_tree = Block::default()
+    let req_get_path = Block::default()
         .borders(Borders::ALL)
         .style(match selected_req_item {
-            ReqItem::GET_TREE => Style::default().fg(Color::Cyan),
+            ReqItem::GET_PATH => Style::default().fg(Color::Cyan),
             // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::White),
             ReqItem::IS_MEMBER => Style::default().fg(Color::White),
         })
@@ -76,7 +76,7 @@ pub fn render_reqs<'a>(
     let req_get_hash_param = Block::default()
         .borders(Borders::ALL)
         .style(match selected_req_item {
-            ReqItem::GET_TREE => Style::default().fg(Color::White),
+            ReqItem::GET_PATH => Style::default().fg(Color::White),
             // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::Cyan),
             ReqItem::IS_MEMBER => Style::default().fg(Color::White),
         })
@@ -86,7 +86,7 @@ pub fn render_reqs<'a>(
     let req_is_member = Block::default()
         .borders(Borders::ALL)
         .style(match selected_req_item {
-            ReqItem::GET_TREE => Style::default().fg(Color::White),
+            ReqItem::GET_PATH => Style::default().fg(Color::White),
             // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::White),
             ReqItem::IS_MEMBER => Style::default().fg(Color::Cyan),
         })
@@ -104,32 +104,24 @@ pub fn render_reqs<'a>(
         .fg(Color::Black)
         .add_modifier(Modifier::BOLD);
 
-    let descript_GT = vec![ListItem::new("This is Get Tree Request")];
+    let descript_gp = vec![ListItem::new("This is Get Tree Request")];
     // let descript_GP = vec![ListItem::new("This is Get Hash Param Request")];
-    let descript_IM = vec![ListItem::new("This is Is Member Request")];
+    let descript_im = vec![ListItem::new("This is Is Member Request")];
 
-    let list_GT =
-        List::new(descript_GT)
-            .block(req_get_tree)
+    let list_gp =
+        List::new(descript_gp)
+            .block(req_get_path)
             .highlight_style(match selected_req_item {
-                ReqItem::GET_TREE => selected_style,
+                ReqItem::GET_PATH => selected_style,
                 // ReqItem::GET_HASH_PARAM => default_style,
                 ReqItem::IS_MEMBER => default_style,
             });
 
-    // let list_GP = List::new(descript_GP)
-    //     .block(req_get_hash_param)
-    //     .highlight_style(match selected_req_item {
-    //         ReqItem::GET_TREE => default_style,
-    //         ReqItem::GET_HASH_PARAM => selected_style,
-    //         ReqItem::IS_MEMBER => default_style,
-    //     });
-
-    let list_IM =
-        List::new(descript_IM)
+    let list_im =
+        List::new(descript_im)
             .block(req_is_member)
             .highlight_style(match selected_req_item {
-                ReqItem::GET_TREE => default_style,
+                ReqItem::GET_PATH => default_style,
                 // ReqItem::GET_HASH_PARAM => default_style,
                 ReqItem::IS_MEMBER => selected_style,
             });
@@ -148,10 +140,10 @@ pub fn render_reqs<'a>(
         )
         .split(req_layout[0]);
 
-    rect.render_widget(list_GT, upper_layout[0]);
+    rect.render_widget(list_gp, upper_layout[0]);
     // rect.render_widget(list_GP, upper_layout[1]);
     // rect.render_widget(list_IM, upper_layout[2]);
-    rect.render_widget(list_IM, upper_layout[1]);
+    rect.render_widget(list_im, upper_layout[1]);
 
     let req_result = render_log();
 

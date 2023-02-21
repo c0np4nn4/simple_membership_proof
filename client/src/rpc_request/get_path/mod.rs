@@ -5,7 +5,7 @@ use http_body_util::BodyExt;
 use hyper::Request;
 use tokio::net::TcpStream;
 
-pub async fn get_tree(url: hyper::Uri) -> Result<Vec<Vec<u8>>> {
+pub async fn get_path(url: hyper::Uri) -> Result<Vec<Vec<u8>>> {
     let host = url.host().expect("uri has no host");
     let port = url.port_u16().unwrap_or(80);
     let addr = format!("{}:{}", host, port);
@@ -39,10 +39,10 @@ pub async fn get_tree(url: hyper::Uri) -> Result<Vec<Vec<u8>>> {
 
     let path: Vec<Vec<u8>> = serde_json::from_slice(&a).unwrap();
 
-    log::info!(" get_tree done!");
+    log::info!(" get_path done!");
 
     for i in 0..(path.len()) {
-        log::info!(" path[{}] [0..16]: {:2x?}", i, &path[i][0..16]);
+        log::info!(" path[{}] [0..8]: {:2x?}", i, &path[i][0..8]);
     }
 
     Ok(path)

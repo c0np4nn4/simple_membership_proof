@@ -1,25 +1,14 @@
 use ark_std::test_rng;
 use bytes::Bytes;
-use handler::{
-    // add_balance, get_balance, get_hash_params,
-    // put_message, register_user,
-    get_root,
-    get_tree,
-    send_proof,
-};
+use handler::{get_path, get_root, send_proof};
 use hyper::{
     body::to_bytes,
     service::{make_service_fn, service_fn},
     Body, Request, Server,
 };
-use payment::{
-    account::{AccountId, AccountPublicKey, AccountSecretKey},
-    ledger::{Amount, Parameters, State},
-};
+use payment::ledger::{Parameters, State};
 use route_recognizer::Params;
 use router::Router;
-use serde::{Deserialize, Serialize};
-use serde_json::from_str;
 use std::sync::{Arc, Mutex};
 
 mod handler;
@@ -64,42 +53,38 @@ impl Context {
     }
 }
 
-struct AccountInfo {
-    id: AccountId,
-    pk: AccountPublicKey,
-    sk: AccountSecretKey,
-}
+// struct AccountInfo {
+//     id: AccountId,
+//     pk: AccountPublicKey,
+//     sk: AccountSecretKey,
+// }
 
-impl AccountInfo {
-    pub fn serialize(&self) {
-        let id: u8 = self.id.0;
-        let pk = self.pk.to_string();
-        let sk_pk = self.sk.public_key.to_string();
-        let sk_sk = self.sk.secret_key.to_string();
+// impl AccountInfo {
+//     pub fn serialize(&self) {
+//         let id: u8 = self.id.0;
+//         let pk = self.pk.to_string();
+//         let sk_pk = self.sk.public_key.to_string();
+//         let sk_sk = self.sk.secret_key.to_string();
 
-        println!("{:?}\n{:?}\n{:?}\n{:?}", id, pk, sk_pk, sk_sk);
-    }
-}
+//         println!("{:?}\n{:?}\n{:?}\n{:?}", id, pk, sk_pk, sk_sk);
+//     }
+// }
 
-pub const TREE_SIZE: u8 = 8;
+pub const TREE_SIZE: usize = 16;
 
 #[tokio::main]
 async fn main() {
     let mut rng = test_rng();
     let pp = Parameters::sample(&mut rng);
-    let mut state = State::new(32, pp.clone());
+    let mut state = State::new(TREE_SIZE * 2, pp.clone());
 
-    for i in 0..15 {
-        let (id, pk, sk) = state.sample_keys_and_register(&pp, &mut rng).unwrap();
-        // println!("[_] user {} info ", i);
-        // println!("\t[1] id: {:?}", id);
-        // println!("\t[2] pk[32..64]: {:?}", &pk.to_string()[32..64]);
-        // println!("\t[3] sk[32..64]: {:?}", &sk.secret_key.to_string()[32..64]);
+    for _ in 0..TREE_SIZE - 1 {
+        let (_id, _pk, _sk) = state.sample_keys_and_register(&pp, &mut rng).unwrap();
 
-        let acc_info = AccountInfo { id, pk, sk };
-
-        acc_info.serialize();
+        // let _acc_info = AccountInfo { id, pk, sk };
     }
+
+    println!("[!] Tree has been initialized");
 
     // println!("state size: {:?}", state.account_merkle_tree.height());
 
@@ -108,16 +93,10 @@ async fn main() {
     let mut router: Router = Router::new();
 
     // get
-    router.get("/get_tree", Box::new(get_tree));
+    router.get("/get_path", Box::new(get_path));
     router.get("/get_root", Box::new(get_root));
-    // router.get("/get_hash_params", Box::new(get_hash_params));
-    // router.get("/get_balance", Box::new(get_balance));
 
     // post
-    // router.post("/add_balance", Box::new(add_balance));
-    // router.post("/register_user", Box::new(register_user));
-    // router.post("/put_message", Box::new(put_message));
-    //
     router.post("/send_proof", Box::new(send_proof));
 
     let shared_router = Arc::new(router);

@@ -13,8 +13,8 @@ pub use register_user::*;
 mod get_root;
 pub use get_root::*;
 
-mod get_tree;
-pub use get_tree::*;
+mod get_path;
+pub use get_path::*;
 
 // post
 mod send_proof;

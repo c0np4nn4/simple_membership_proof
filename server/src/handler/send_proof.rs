@@ -27,7 +27,7 @@ pub async fn send_proof(mut ctx: Context) -> Response {
     let state = ctx.state.state_thing;
     let mut state_lock = state.try_lock().unwrap();
 
-    if state_lock.next_available_account.unwrap() == AccountId(TREE_SIZE / 2) {
+    if state_lock.next_available_account.unwrap() == AccountId(TREE_SIZE as u8 / 2) {
         return Response::new(format!("[-] Overflow Detected (Maximum: {})\n", TREE_SIZE).into());
     }
 

@@ -84,7 +84,7 @@ pub type AccMerkleTree = MerkleTree<MerkleConfig>;
 /// The root of the account Merkle tree.
 pub type AccRoot = <TwoToOneHash as TwoToOneCRH>::Output;
 /// A membership proof for a given account.
-pub type AccPath = Path<MerkleConfig>;
+pub type _AccPath = Path<MerkleConfig>;
 
 #[derive(Clone)]
 pub struct State {
