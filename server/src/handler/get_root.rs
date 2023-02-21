@@ -73,6 +73,8 @@ pub async fn get_root(mut ctx: Context) -> Response {
     println!("[3] root: {:?}", merkle_tree.root().0 .0);
 
     // merkle_tree.root().0 .0.serialize(&mut root_vec).unwrap();
+    // merkle_tree.root()의 타입 궁금해서 찍어봄
+    // let root = merkle_tree.root();
 
     let root_vec = convert_u64_array_to_u8_vec(merkle_tree.root().0 .0);
 
