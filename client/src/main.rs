@@ -64,6 +64,8 @@ impl From<ReqItem> for usize {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    std::env::set_var("RUST_BACKTRACE", "1");
+
     enable_raw_mode().expect("can run in raw mode");
     tui_logger::init_logger(log::LevelFilter::Trace).unwrap();
     tui_logger::set_default_level(log::LevelFilter::Info);
@@ -213,11 +215,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 KeyCode::Enter => match selected_req_item {
                     ReqItem::GET_PATH => {
-                        let mut url = String::from("http://127.0.0.1:8080/get_path");
+                        let url = String::from("http://127.0.0.1:8080/get_path");
                         let url = url.parse::<hyper::Uri>().unwrap();
                         path_data = get_path(url).await.unwrap();
 
-                        let mut url = String::from("http://127.0.0.1:8080/get_root");
+                        let url = String::from("http://127.0.0.1:8080/get_root");
                         let url = url.parse::<hyper::Uri>().unwrap();
                         root_data = get_root(url).await.unwrap();
                     }
@@ -233,10 +235,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         log::info!("[+] root[0..16]: {:?}", &root_data[0..16]);
 
                         let mut url = String::from("http://127.0.0.1:8080/send_proof");
+
                         let url = url.parse::<hyper::Uri>().unwrap();
+
                         match send_proof(url, &path_data, &root_data).await {
                             Ok(res) => {
-                                log::info!("gen proof done!, res: {:?}", res);
+                                log::warn!("gen proof done!, res: {:?}", res);
                             }
                             Err(e) => {
                                 log::error!("Error: {:?}", e);

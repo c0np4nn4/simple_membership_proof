@@ -1,5 +1,9 @@
-use crate::{payment::account::AccountId, Context, Response, TREE_SIZE};
-use ark_serialize::CanonicalSerialize;
+use crate::{
+    payment::{account::AccountId, ledger::MerkleConfig},
+    Context, Response, TREE_SIZE,
+};
+use ark_crypto_primitives::Path;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use hyper::StatusCode;
 use serde::Deserialize;
 
@@ -35,6 +39,13 @@ pub async fn get_path(mut ctx: Context) -> Response {
         let path = merkle_tree.generate_proof(i as usize).unwrap();
 
         path.serialize(&mut path_bytes).unwrap();
+
+        // for test
+        {
+            let tmp = Path::<MerkleConfig>::deserialize(path_bytes.as_slice()).unwrap();
+
+            assert_eq!(tmp.auth_path, path.auth_path);
+        }
 
         paths.push(path_bytes);
     }

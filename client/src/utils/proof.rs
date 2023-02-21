@@ -2,6 +2,7 @@ use ark_bls12_381::{Bls12_381, Parameters};
 use ark_crypto_primitives::{crh::TwoToOneCRH, Path, CRH};
 use ark_ec::bls12::Bls12;
 use ark_groth16::{Groth16, Proof, VerifyingKey};
+use ark_serialize::CanonicalSerialize;
 use ark_snark::SNARK;
 
 use super::circuit::{LeafHash, MerkleConfig, MyCircuit, Root, TwoToOneHash};
@@ -47,11 +48,21 @@ pub fn gen_proof_and_vk(
     let (pk, vk) =
         Groth16::<Bls12_381>::circuit_specific_setup(circuit_for_key_gen, &mut rng).unwrap();
 
-    // log::warn!("vk: {:?}", vk);
+    log::warn!("vk: {:?}", vk);
 
-    // let circuit = build_my_circuit(leaf, root, path);
+    let mut ser_vk = Vec::<u8>::default();
 
-    // let proof = Groth16::prove(&pk, circuit, &mut rng).unwrap();
+    vk.serialize_unchecked(&mut ser_vk).unwrap();
+
+    let circuit = build_my_circuit(leaf, root, path);
+
+    let proof = Groth16::prove(&pk, circuit, &mut rng).unwrap();
+
+    let mut ser_proof = Vec::<u8>::default();
+
+    proof.serialize(&mut ser_proof).unwrap();
+
+    log::error!("proof: {:?}", ser_proof);
 
     // (proof, vk)
     ()

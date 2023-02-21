@@ -35,18 +35,21 @@ pub async fn send_proof(url: hyper::Uri, path: &Vec<Vec<u8>>, root: &Vec<u8>) ->
 
     let authority = url.authority().unwrap().clone();
 
+    // for test, leaf == 1 as u8
     let leaf = 1u8;
 
     let root = Root::deserialize(root.as_slice()).unwrap();
+
     log::info!("root: {:?}", root);
 
     let mut paths: Vec<Path<MerkleConfig>> = Vec::default();
+
     for p in path {
-        let r = Path::deserialize(p.as_slice()).unwrap();
+        let res = Path::<MerkleConfig>::deserialize(p.as_slice()).unwrap();
 
-        log::info!("path: {:?}", r.auth_path);
+        log::info!("path: {:?}", res.leaf_sibling_hash);
 
-        paths.push(r);
+        paths.push(res);
     }
 
     gen_proof_and_vk(leaf, root, paths[leaf as usize].clone());
@@ -73,13 +76,11 @@ pub async fn send_proof(url: hyper::Uri, path: &Vec<Vec<u8>>, root: &Vec<u8>) ->
 
     let mut res = sender.send_request(req).await?;
 
-    // log::warn!(" Response: {}", res.status());
-    // log::warn!(" Headers: {:#?}\n", res.headers());
-    // log::warn!(" Body: {:#?}\n", res.body());
-
     let mut a: Bytes = Bytes::default();
+
     while let Some(next) = res.frame().await {
         let frame = next?;
+
         if let Some(chunk) = frame.data_ref() {
             a = chunk.to_owned();
             // io::stdout().write_all(&chunk).await?;
