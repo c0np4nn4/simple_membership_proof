@@ -36,7 +36,7 @@ pub async fn send_proof(url: hyper::Uri, path: &Vec<Vec<u8>>, root: &Vec<u8>) ->
     let authority = url.authority().unwrap().clone();
 
     // for test, leaf == 1 as u8
-    let leaf = 3u8;
+    let leaf = 1u8;
 
     let ser_root = root.clone();
 

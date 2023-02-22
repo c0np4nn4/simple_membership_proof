@@ -1,17 +1,8 @@
-use crate::{
-    circuit::{MerkleConfig, MyCircuit, Root},
-    payment::{
-        account::AccountId,
-        ledger::{LeafHash, Parameters, TwoToOneHash},
-    },
-    Context, Response, TREE_SIZE,
-};
+use crate::{circuit::Root, Context, Response};
 use ark_bls12_381::Bls12_381;
-use ark_crypto_primitives::{crh::TwoToOneCRH, Path, CRH, SNARK};
-use ark_ec::bls12::Bls12;
-use ark_ff::{Fp256, Fp256Parameters};
+use ark_crypto_primitives::SNARK;
 use ark_groth16::{Groth16, Proof, VerifyingKey};
-use ark_serialize::CanonicalDeserialize;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::test_rng;
 use hyper::StatusCode;
 use serde::Deserialize;
@@ -39,9 +30,9 @@ pub async fn send_proof(mut ctx: Context) -> Response {
     println!("[!] vk: {:?}", body.vk);
 
     let state = ctx.state.state_thing;
-    let mut state_lock = state.try_lock().unwrap();
+    let state_lock = state.try_lock().unwrap();
 
-    let mut rng = test_rng();
+    let mut _rng = test_rng();
 
     // let pp = Parameters::sample(&mut rng);
 
@@ -53,17 +44,28 @@ pub async fn send_proof(mut ctx: Context) -> Response {
     let public_input = convert_u8_vec_to_u64_array(body.public_input.clone());
     let public_input = Root::new(ark_ff::BigInteger256(public_input));
     // let public_input = state_lock.account_merkle_tree.root();
-    {
-        let tmp = state_lock.account_merkle_tree.root();
-        println!("body.root: ");
-        for b in body.public_input {
-            print!("{:02x?} ", b);
-        }
-        println!("\nstate.merkle_tree.root: {:?}", tmp);
-        println!("req.merkle_tree.root: {:?}", public_input);
-    }
+    // {
+    //     // let tmp = state_lock.account_merkle_tree.root();
+    //     let tmp = state_lock.root();
+    //     println!("body.root: ");
+    //     for b in body.public_input {
+    //         print!("{:02x?} ", b);
+    //     }
+    //     println!("\nstate.merkle_tree.root: {:?}", tmp);
+    //     println!("req.merkle_tree.root: {:?}", public_input);
+    // }
 
     let vk = VerifyingKey::<Bls12_381>::deserialize(body.vk.as_slice()).unwrap();
+
+    let mut tmp1 = Vec::new();
+    let mut tmp2 = Vec::new();
+    proof.serialize(&mut tmp1).unwrap();
+    vk.serialize_unchecked(&mut tmp2).unwrap();
+
+    println!("[check]");
+    println!("  proof: {:?}", tmp1);
+    println!("  vk: {:?}", tmp2);
+    println!("  root: {:?}", public_input);
 
     let valid_proof = Groth16::verify(&vk, &[public_input], &proof).unwrap();
 

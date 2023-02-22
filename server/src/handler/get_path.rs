@@ -29,7 +29,8 @@ pub async fn get_path(mut ctx: Context) -> Response {
     let _acc_id = AccountId(body.account_id);
     let state_lock = state.lock().unwrap();
 
-    let merkle_tree = state_lock.account_merkle_tree.clone();
+    // let merkle_tree = state_lock.account_merkle_tree.clone();
+    let merkle_tree = state_lock.clone();
 
     let mut paths: Vec<Vec<u8>> = vec![];
 

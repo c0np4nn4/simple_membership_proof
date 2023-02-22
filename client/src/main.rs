@@ -57,7 +57,7 @@ impl From<ReqItem> for usize {
         match input {
             ReqItem::GET_PATH => 0,
             // ReqItem::GET_HASH_PARAM => 1,
-            ReqItem::SEND_PROOF=> 2,
+            ReqItem::SEND_PROOF => 2,
         }
     }
 }
@@ -224,7 +224,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         root_data = get_root(url).await.unwrap();
                     }
 
-                    ReqItem::SEND_PROOF=> {
+                    ReqItem::SEND_PROOF => {
                         log::warn!("[!] generating proof...");
 
                         let mut url = String::from("http://127.0.0.1:8080/send_proof");

@@ -38,6 +38,8 @@ pub fn gen_proof_and_vk(
     root: Root,
     path: Path<MerkleConfig>,
 ) -> (Vec<u8>, Vec<u8>) {
+    let leaf = leaf * 10;
+
     log::warn!("[!] generating proof and VerifyingKey...");
 
     let circuit_for_key_gen = build_my_circuit(leaf, root, path.clone());
@@ -66,6 +68,7 @@ pub fn gen_proof_and_vk(
     proof.serialize(&mut ser_proof).unwrap();
 
     log::error!("proof: {:?}", &ser_proof);
+    log::error!("vk: {:?}", &ser_vk);
 
     (ser_vk, ser_proof)
 }

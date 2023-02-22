@@ -55,7 +55,8 @@ pub async fn get_root(mut ctx: Context) -> Response {
     let _acc_id = AccountId(body.account_id);
     let state_lock = state.lock().unwrap();
 
-    let merkle_tree = state_lock.account_merkle_tree.clone();
+    // let merkle_tree = state_lock.account_merkle_tree.clone();
+    let merkle_tree = state_lock.clone();
 
     // let mut root_vec = Vec::default();
 

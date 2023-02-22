@@ -6,7 +6,7 @@ use hyper::{
     service::{make_service_fn, service_fn},
     Body, Request, Server,
 };
-use payment::ledger::{Parameters, State};
+use payment::ledger::{AccMerkleTree, Parameters, State};
 use route_recognizer::Params;
 use router::Router;
 use std::sync::{Arc, Mutex};
@@ -21,7 +21,8 @@ type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub state_thing: Arc<Mutex<State>>,
+    // pub state_thing: Arc<Mutex<State>>,
+    pub state_thing: Arc<Mutex<AccMerkleTree>>,
 }
 
 pub struct Context {
@@ -54,23 +55,6 @@ impl Context {
     }
 }
 
-// struct AccountInfo {
-//     id: AccountId,
-//     pk: AccountPublicKey,
-//     sk: AccountSecretKey,
-// }
-
-// impl AccountInfo {
-//     pub fn serialize(&self) {
-//         let id: u8 = self.id.0;
-//         let pk = self.pk.to_string();
-//         let sk_pk = self.sk.public_key.to_string();
-//         let sk_sk = self.sk.secret_key.to_string();
-
-//         println!("{:?}\n{:?}\n{:?}\n{:?}", id, pk, sk_pk, sk_sk);
-//     }
-// }
-
 pub const TREE_SIZE: usize = 16;
 
 #[tokio::main]
@@ -79,17 +63,29 @@ async fn main() {
     let pp = Parameters::sample(&mut rng);
     let mut state = State::new(TREE_SIZE * 2, pp.clone());
 
-    for _ in 0..TREE_SIZE - 1 {
-        let (_id, _pk, _sk) = state.sample_keys_and_register(&pp, &mut rng).unwrap();
+    let tree = AccMerkleTree::new(
+        &pp.leaf_crh_params,
+        &pp.two_to_one_crh_params,
+        &[10u8, 20u8, 30u8, 40u8, 50u8, 60u8, 70u8, 80u8], // the i-th entry is the i-th leaf.
+    )
+    .unwrap();
 
-        // let _acc_info = AccountInfo { id, pk, sk };
-    }
+    // for _ in 0..TREE_SIZE - 1 {
+    //     let (id, pk, sk) = state.sample_keys_and_register(&pp, &mut rng).unwrap();
+    //     println!("\n[member info]");
+    //     println!("[id]: {:?}", id);
+    //     println!("[pub key]: {:?}", pk);
+    //     println!("[sec key]: {:?}", sk);
+
+    //     // let _acc_info = AccountInfo { id, pk, sk };
+    // }
 
     println!("[!] Tree has been initialized");
 
     // println!("state size: {:?}", state.account_merkle_tree.height());
 
-    let runtime_state = Arc::new(Mutex::new(state));
+    // let runtime_state = Arc::new(Mutex::new(state));
+    let runtime_tree = Arc::new(Mutex::new(tree));
 
     let mut router: Router = Router::new();
 
@@ -104,7 +100,8 @@ async fn main() {
 
     let new_service = make_service_fn(move |_| {
         let app_state = AppState {
-            state_thing: runtime_state.clone(),
+            // state_thing: runtime_state.clone(),
+            state_thing: runtime_tree.clone(),
         };
 
         let router_capture = shared_router.clone();
