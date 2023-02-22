@@ -68,7 +68,7 @@ pub fn render_reqs<'a>(
         .style(match selected_req_item {
             ReqItem::GET_PATH => Style::default().fg(Color::Cyan),
             // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::White),
-            ReqItem::IS_MEMBER => Style::default().fg(Color::White),
+            ReqItem::SEND_PROOF => Style::default().fg(Color::White),
         })
         .title("[1] GET TREE")
         .border_type(BorderType::Plain);
@@ -78,7 +78,7 @@ pub fn render_reqs<'a>(
         .style(match selected_req_item {
             ReqItem::GET_PATH => Style::default().fg(Color::White),
             // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::Cyan),
-            ReqItem::IS_MEMBER => Style::default().fg(Color::White),
+            ReqItem::SEND_PROOF => Style::default().fg(Color::White),
         })
         .title("[2] GET HASH PARAM")
         .border_type(BorderType::Plain);
@@ -88,10 +88,10 @@ pub fn render_reqs<'a>(
         .style(match selected_req_item {
             ReqItem::GET_PATH => Style::default().fg(Color::White),
             // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::White),
-            ReqItem::IS_MEMBER => Style::default().fg(Color::Cyan),
+            ReqItem::SEND_PROOF => Style::default().fg(Color::Cyan),
         })
         // .title("[3] IS MEMBER")
-        .title("[2] IS MEMBER")
+        .title("[2] SEND PROOF")
         .border_type(BorderType::Thick);
 
     let selected_style = Style::default()
@@ -114,7 +114,7 @@ pub fn render_reqs<'a>(
             .highlight_style(match selected_req_item {
                 ReqItem::GET_PATH => selected_style,
                 // ReqItem::GET_HASH_PARAM => default_style,
-                ReqItem::IS_MEMBER => default_style,
+                ReqItem::SEND_PROOF => default_style,
             });
 
     let list_im =
@@ -123,7 +123,7 @@ pub fn render_reqs<'a>(
             .highlight_style(match selected_req_item {
                 ReqItem::GET_PATH => default_style,
                 // ReqItem::GET_HASH_PARAM => default_style,
-                ReqItem::IS_MEMBER => selected_style,
+                ReqItem::SEND_PROOF => selected_style,
             });
 
     let upper_layout = Layout::default()

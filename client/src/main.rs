@@ -49,7 +49,7 @@ impl From<MenuItem> for usize {
 pub enum ReqItem {
     GET_PATH,
     // GET_HASH_PARAM,
-    IS_MEMBER,
+    SEND_PROOF,
 }
 
 impl From<ReqItem> for usize {
@@ -57,13 +57,15 @@ impl From<ReqItem> for usize {
         match input {
             ReqItem::GET_PATH => 0,
             // ReqItem::GET_HASH_PARAM => 1,
-            ReqItem::IS_MEMBER => 2,
+            ReqItem::SEND_PROOF=> 2,
         }
     }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    std::env::set_var("RUST_BACKTRACE", "1");
+
     enable_raw_mode().expect("can run in raw mode");
     tui_logger::init_logger(log::LevelFilter::Trace).unwrap();
     tui_logger::set_default_level(log::LevelFilter::Info);
@@ -100,7 +102,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut active_menu_item = MenuItem::Home;
     let mut selected_req_item = ReqItem::GET_PATH;
 
-    let mut path_data: Vec<Vec<u8>> = Vec::default();
+    let mut path_data: Vec<Vec<u8>> = Vec::new();
     // let mut root_data: Vec<u8> = Vec::default();
     let mut root_data: Vec<u8> = vec![1, 2, 3, 4];
 
@@ -207,43 +209,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 //     log::info!(" Request `Is Member`");
                 // }
                 KeyCode::Char('2') => {
-                    selected_req_item = ReqItem::IS_MEMBER;
+                    selected_req_item = ReqItem::SEND_PROOF;
                     log::info!(" Request `Is Member`");
                 }
 
                 KeyCode::Enter => match selected_req_item {
                     ReqItem::GET_PATH => {
-                        let mut url = String::from("http://127.0.0.1:8080/get_path");
+                        let url = String::from("http://127.0.0.1:8080/get_path");
                         let url = url.parse::<hyper::Uri>().unwrap();
                         path_data = get_path(url).await.unwrap();
 
-                        let mut url = String::from("http://127.0.0.1:8080/get_root");
+                        let url = String::from("http://127.0.0.1:8080/get_root");
                         let url = url.parse::<hyper::Uri>().unwrap();
                         root_data = get_root(url).await.unwrap();
                     }
-                    // ReqItem::GET_HASH_PARAM => {
-                    //     let mut url = String::from("http://127.0.0.1:8080/get_hash_params");
-                    //     let url = url.parse::<hyper::Uri>().unwrap();
-                    //     hash_params_data = get_hash_params(url).await.unwrap();
-                    // }
-                    ReqItem::IS_MEMBER => {
+
+                    ReqItem::SEND_PROOF=> {
                         log::warn!("[!] generating proof...");
-                        // let merkle_tree = make_tree();
-                        // log::info!("[+] tree has been constructed!");
-                        log::info!("[+] root[0..16]: {:?}", &root_data[0..16]);
 
                         let mut url = String::from("http://127.0.0.1:8080/send_proof");
+
                         let url = url.parse::<hyper::Uri>().unwrap();
+
                         match send_proof(url, &path_data, &root_data).await {
                             Ok(res) => {
-                                log::info!("gen proof done!, res: {:?}", res);
+                                log::warn!("gen proof done!");
                             }
                             Err(e) => {
                                 log::error!("Error: {:?}", e);
                             }
                         };
-
-                        log::error!(" not implemented yet!")
                     }
                 },
                 _ => {}
