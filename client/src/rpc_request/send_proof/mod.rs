@@ -39,15 +39,10 @@ pub async fn send_proof(
 
     let authority = url.authority().unwrap().clone();
 
-    // for test, leaf == 1 as u8
-    // let leaf = 1u8;
-
     let ser_root = root.clone();
 
     let root = convert_u8_vec_to_u64_array(root.clone());
     let root = Root::new(BigInteger256::new(root));
-
-    log::info!("root: {:?}", root);
 
     let mut paths: Vec<Path<MerkleConfig>> = Vec::default();
 

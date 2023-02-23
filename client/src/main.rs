@@ -278,13 +278,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 KeyCode::Enter => match app.input_mode {
                     InputMode::Normal => match selected_req_item {
                         ReqItem::GetPath => {
-                            let url = String::from("http://127.0.0.1:8080/get_path");
-                            let url = url.parse::<hyper::Uri>().unwrap();
-                            path_data = get_path(url).await.unwrap();
-
-                            let url = String::from("http://127.0.0.1:8080/get_root");
-                            let url = url.parse::<hyper::Uri>().unwrap();
-                            root_data = get_root(url).await.unwrap();
+                            app.input_mode = InputMode::Edit;
                         }
 
                         ReqItem::SendProof => {
@@ -292,7 +286,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     },
                     InputMode::Edit => match selected_req_item {
-                        ReqItem::GetPath => {}
+                        ReqItem::GetPath => {
+                            let name = app.input.clone();
+
+                            let url = String::from("http://127.0.0.1:8080/get_path");
+                            let url = url.parse::<hyper::Uri>().unwrap();
+                            path_data = get_path(url, format!("{}_path", name.clone()))
+                                .await
+                                .unwrap();
+
+                            let url = String::from("http://127.0.0.1:8080/get_root");
+                            let url = url.parse::<hyper::Uri>().unwrap();
+                            root_data = get_root(url, format!("{}_root", name.clone()))
+                                .await
+                                .unwrap();
+
+                            app.input_mode = InputMode::Normal;
+                            app.input.clear();
+                        }
                         ReqItem::SendProof => {
                             let value: Vec<u8> = app
                                 .input

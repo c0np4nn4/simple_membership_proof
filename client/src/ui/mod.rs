@@ -137,7 +137,7 @@ pub fn render_input_member_id<'a>(app: &'a App) -> Paragraph<'a> {
         .block(
             Block::default()
                 .borders(Borders::ALL)
-                .title("FORM: (leaf_value)<space>(leaf_index)"),
+                .title("  Input Box | [1]: String | [2]: u8<space>u8  "),
         );
     input
 }

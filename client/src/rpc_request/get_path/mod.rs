@@ -5,7 +5,7 @@ use http_body_util::BodyExt;
 use hyper::Request;
 use tokio::net::TcpStream;
 
-pub async fn get_path(url: hyper::Uri) -> Result<Vec<Vec<u8>>> {
+pub async fn get_path(url: hyper::Uri, name: String) -> Result<Vec<Vec<u8>>> {
     let host = url.host().expect("uri has no host");
     let port = url.port_u16().unwrap_or(80);
     let addr = format!("{}:{}", host, port);
@@ -24,7 +24,7 @@ pub async fn get_path(url: hyper::Uri) -> Result<Vec<Vec<u8>>> {
         .uri(url)
         .method("GET")
         .header(hyper::header::HOST, authority.as_str())
-        .body("{\"account_id\": 1}".to_string())?;
+        .body(format!("{{\"name\": {:?}}}", name).to_string())?;
 
     let mut res = sender.send_request(req).await?;
 

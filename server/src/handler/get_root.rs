@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 struct GetRootRequest {
-    account_id: u8,
+    name: String,
 }
 
 fn convert_u64_array_to_u8_vec(array_u64: [u64; 4]) -> Vec<u8> {
@@ -34,7 +34,7 @@ fn convert_u64_array_to_u8_vec(array_u64: [u64; 4]) -> Vec<u8> {
 }
 
 pub async fn get_root(mut ctx: Context) -> Response {
-    let _body: GetRootRequest = match ctx.body_json().await {
+    let body: GetRootRequest = match ctx.body_json().await {
         Ok(v) => v,
         Err(e) => {
             return hyper::Response::builder()
@@ -43,6 +43,8 @@ pub async fn get_root(mut ctx: Context) -> Response {
                 .unwrap();
         }
     };
+
+    println!("[get_root] name: {:?} requested root", body.name);
 
     let state = ctx.state.state_thing;
 

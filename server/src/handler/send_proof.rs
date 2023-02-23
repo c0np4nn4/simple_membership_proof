@@ -32,18 +32,17 @@ pub async fn send_proof(mut ctx: Context) -> Response {
 
     let vk = VerifyingKey::<Bls12_381>::deserialize(body.vk.as_slice()).unwrap();
 
-    let mut tmp1 = Vec::new();
-    let mut tmp2 = Vec::new();
-    proof.serialize(&mut tmp1).unwrap();
-    vk.serialize_unchecked(&mut tmp2).unwrap();
-
     let valid_proof = Groth16::verify(&vk, &[public_input], &proof).unwrap();
 
+    let flag = "keeper_2022_tech{zer0_kn0wledg3_pr00f}";
+    let ban_msg = "CONFIDENTIAL";
+
     if valid_proof == true {
-        println!("[Verified Member]");
-        Response::new(format!("validation done, Good").into())
+        println!("[send_proof] Verified Member tried to access confidential data",);
+        Response::new(flag.into())
     } else {
-        Response::new(format!("validation done, Fail").into())
+        println!("[send_proof] Unknown user tried to access confidential data",);
+        Response::new(ban_msg.into())
     }
 }
 

@@ -5,11 +5,11 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 struct GetTreeRequest {
-    account_id: u8,
+    name: String,
 }
 
 pub async fn get_path(mut ctx: Context) -> Response {
-    let _body: GetTreeRequest = match ctx.body_json().await {
+    let body: GetTreeRequest = match ctx.body_json().await {
         Ok(v) => v,
         Err(e) => {
             return hyper::Response::builder()
@@ -18,6 +18,8 @@ pub async fn get_path(mut ctx: Context) -> Response {
                 .unwrap();
         }
     };
+
+    println!("[get_path] name: {:?} requested path", body.name);
 
     let state = ctx.state.state_thing;
     let state_lock = state.lock().unwrap();

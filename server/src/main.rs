@@ -1,3 +1,4 @@
+use ark_crypto_primitives::crh::CRH;
 use ark_crypto_primitives::{crh::TwoToOneCRH, MerkleTree};
 use ark_std::test_rng;
 use bytes::Bytes;
@@ -62,17 +63,15 @@ pub const TREE_SIZE: usize = 16;
 
 #[tokio::main]
 async fn main() {
-    use ark_crypto_primitives::crh::CRH;
     let mut rng = test_rng();
 
-    // First, let's sample the public parameters for the hash functions:
     let leaf_crh_params = <LeafHash as CRH>::setup(&mut rng).unwrap();
     let two_to_one_crh_params = <TwoToOneHash as TwoToOneCRH>::setup(&mut rng).unwrap();
 
     let tree = SimpleMerkleTree::new(
         &leaf_crh_params,
         &two_to_one_crh_params,
-        &[10u8, 20u8, 30u8, 40u8, 50u8, 60u8, 70u8, 80u8], // the i-th entry is the i-th leaf.
+        &[10u8, 20u8, 30u8, 40u8, 50u8, 60u8, 70u8, 80u8],
     )
     .unwrap();
 
@@ -120,15 +119,15 @@ async fn route(
     req: Request<hyper::Body>,
     app_state: AppState,
 ) -> Result<Response, Error> {
-    println!("[!] route has been invoked!, req: {:?}", req);
+    println!("\n[route] req: {:?}", req.uri());
 
     let found_handler = router.route(req.uri().path(), req.method());
 
     let resp = found_handler
         .handler
         .invoke(Context::new(
-            //
             app_state,
+            //
             req,
             found_handler.params,
         ))
