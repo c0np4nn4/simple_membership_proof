@@ -1,7 +1,6 @@
-use ark_bls12_381::{Bls12_381, Parameters};
+use ark_bls12_381::Bls12_381;
 use ark_crypto_primitives::{crh::TwoToOneCRH, Path, CRH};
-use ark_ec::bls12::Bls12;
-use ark_groth16::{Groth16, Proof, VerifyingKey};
+use ark_groth16::Groth16;
 use ark_serialize::CanonicalSerialize;
 use ark_snark::SNARK;
 
@@ -38,7 +37,7 @@ pub fn gen_proof_and_vk(
     root: Root,
     path: Path<MerkleConfig>,
 ) -> (Vec<u8>, Vec<u8>) {
-    let leaf = leaf * 10;
+    let leaf = (leaf + 1) * 10;
 
     log::warn!("[!] generating proof and VerifyingKey...");
 
@@ -46,16 +45,23 @@ pub fn gen_proof_and_vk(
 
     let mut rng = ark_std::test_rng();
 
+    // log::error!("leaf: {:?}", leaf);
+    // log::error!("path: {:?}", path.auth_path);
+
     let (pk, vk) =
         Groth16::<Bls12_381>::circuit_specific_setup(circuit_for_key_gen, &mut rng).unwrap();
 
+    // vk serialize
     let mut ser_vk = Vec::<u8>::default();
-
     vk.serialize(&mut ser_vk).unwrap();
 
-    let circuit = build_my_circuit(leaf, root, path);
+    let circuit = build_my_circuit(leaf, root, path.clone());
 
     let proof = Groth16::<Bls12_381>::prove(&pk, circuit, &mut rng).unwrap();
+
+    log::info!("5555 root: {:?}", root.0);
+    log::info!("5555 leaf: {:?}", leaf);
+    log::info!("5555 path: {:?}", path.leaf_sibling_hash.0);
 
     // test
     {
@@ -67,8 +73,9 @@ pub fn gen_proof_and_vk(
 
     proof.serialize(&mut ser_proof).unwrap();
 
-    log::error!("proof: {:?}", &ser_proof);
-    log::error!("vk: {:?}", &ser_vk);
+    // log::error!("proof: {:?}", &ser_proof);
+    // log::error!("vk: {:?}", &ser_vk);
 
     (ser_vk, ser_proof)
+    // (vec![], vec![])
 }

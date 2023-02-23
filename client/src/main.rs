@@ -2,7 +2,7 @@ use crossterm::{
     event::{self, Event as CEvent, KeyCode},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
-use payment::ledger::Parameters;
+// use payment::ledger::Parameters;
 use std::io;
 use std::sync::mpsc;
 use std::thread;
@@ -18,9 +18,9 @@ use tui::{
 
 use rpc_request::{get_path::get_path, get_root::get_root, send_proof::send_proof};
 use ui::{render_home, render_reqs};
-use utils::make_tree;
+// use utils::make_tree;
 
-mod payment;
+// mod payment;
 mod rpc_request;
 mod ui;
 mod utils;

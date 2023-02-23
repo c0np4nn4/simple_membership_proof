@@ -17,7 +17,7 @@ then
 elif [ $1 == "test" ]
 then
   echo "[!] Test"
-  cargo test --release
+  cargo test --release -- --nocapture
   # cargo test
 
 else

@@ -6,7 +6,7 @@ use ark_crypto_primitives::crh::{
     pedersen,
 };
 use ark_crypto_primitives::crh::{TwoToOneCRH, TwoToOneCRHGadget};
-use ark_crypto_primitives::merkle_tree::{Config, MerkleTree, Path};
+use ark_crypto_primitives::merkle_tree::{Config, Path};
 use ark_crypto_primitives::{CRHGadget, CRH};
 use ark_ed_on_bls12_381::{constraints::EdwardsVar, EdwardsProjective};
 

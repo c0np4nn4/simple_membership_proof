@@ -1,6 +1,6 @@
-use crate::payment::ledger::{MerkleConfig, Parameters};
-use ark_crypto_primitives::MerkleTree;
-use ark_std::test_rng;
+// use crate::payment::ledger::{MerkleConfig, Parameters};
+// use ark_crypto_primitives::MerkleTree;
+// use ark_std::test_rng;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -22,19 +22,19 @@ pub enum ClientError {
     ParseDBError(#[from] serde_json::Error),
 }
 
-pub fn make_tree() -> MerkleTree<MerkleConfig> {
-    let mut rng = test_rng();
-    let pp = Parameters::sample(&mut rng);
+// pub fn make_tree() -> MerkleTree<MerkleConfig> {
+//     let mut rng = test_rng();
+//     let pp = Parameters::sample(&mut rng);
 
-    let num = 32usize;
-    let height = ark_std::log2(num);
+//     let num = 32usize;
+//     let height = ark_std::log2(num);
 
-    let merkle_tree = MerkleTree::blank(
-        &pp.leaf_crh_params,
-        &pp.two_to_one_crh_params,
-        height as usize,
-    )
-    .unwrap();
+//     let merkle_tree = MerkleTree::blank(
+//         &pp.leaf_crh_params,
+//         &pp.two_to_one_crh_params,
+//         height as usize,
+//     )
+//     .unwrap();
 
-    merkle_tree
-}
+//     merkle_tree
+// }

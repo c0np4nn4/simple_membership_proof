@@ -1,3 +1,4 @@
+use ark_crypto_primitives::{crh::TwoToOneCRH, MerkleTree};
 use ark_std::test_rng;
 use bytes::Bytes;
 use handler::{get_path, get_root, send_proof};
@@ -6,15 +7,19 @@ use hyper::{
     service::{make_service_fn, service_fn},
     Body, Request, Server,
 };
-use payment::ledger::{AccMerkleTree, Parameters, State};
 use route_recognizer::Params;
 use router::Router;
 use std::sync::{Arc, Mutex};
+
+use crate::circuit::{LeafHash, MerkleConfig, TwoToOneHash};
 
 mod circuit;
 mod handler;
 mod payment;
 mod router;
+mod tree;
+
+type SimpleMerkleTree = MerkleTree<MerkleConfig>;
 
 type Response = hyper::Response<hyper::Body>;
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
@@ -22,7 +27,7 @@ type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 #[derive(Clone)]
 pub struct AppState {
     // pub state_thing: Arc<Mutex<State>>,
-    pub state_thing: Arc<Mutex<AccMerkleTree>>,
+    pub state_thing: Arc<Mutex<SimpleMerkleTree>>,
 }
 
 pub struct Context {
@@ -59,32 +64,22 @@ pub const TREE_SIZE: usize = 16;
 
 #[tokio::main]
 async fn main() {
+    use ark_crypto_primitives::crh::CRH;
     let mut rng = test_rng();
-    let pp = Parameters::sample(&mut rng);
-    let mut state = State::new(TREE_SIZE * 2, pp.clone());
 
-    let tree = AccMerkleTree::new(
-        &pp.leaf_crh_params,
-        &pp.two_to_one_crh_params,
+    // First, let's sample the public parameters for the hash functions:
+    let leaf_crh_params = <LeafHash as CRH>::setup(&mut rng).unwrap();
+    let two_to_one_crh_params = <TwoToOneHash as TwoToOneCRH>::setup(&mut rng).unwrap();
+
+    let tree = SimpleMerkleTree::new(
+        &leaf_crh_params,
+        &two_to_one_crh_params,
         &[10u8, 20u8, 30u8, 40u8, 50u8, 60u8, 70u8, 80u8], // the i-th entry is the i-th leaf.
     )
     .unwrap();
 
-    // for _ in 0..TREE_SIZE - 1 {
-    //     let (id, pk, sk) = state.sample_keys_and_register(&pp, &mut rng).unwrap();
-    //     println!("\n[member info]");
-    //     println!("[id]: {:?}", id);
-    //     println!("[pub key]: {:?}", pk);
-    //     println!("[sec key]: {:?}", sk);
-
-    //     // let _acc_info = AccountInfo { id, pk, sk };
-    // }
-
     println!("[!] Tree has been initialized");
 
-    // println!("state size: {:?}", state.account_merkle_tree.height());
-
-    // let runtime_state = Arc::new(Mutex::new(state));
     let runtime_tree = Arc::new(Mutex::new(tree));
 
     let mut router: Router = Router::new();

@@ -34,26 +34,11 @@ pub async fn send_proof(mut ctx: Context) -> Response {
 
     let mut _rng = test_rng();
 
-    // let pp = Parameters::sample(&mut rng);
-
     // --------------------------
     let proof = Proof::<Bls12_381>::deserialize(body.proof.as_slice()).unwrap();
 
-    // let public_input = Root::deserialize(body.public_input.as_slice()).unwrap();
-
     let public_input = convert_u8_vec_to_u64_array(body.public_input.clone());
     let public_input = Root::new(ark_ff::BigInteger256(public_input));
-    // let public_input = state_lock.account_merkle_tree.root();
-    // {
-    //     // let tmp = state_lock.account_merkle_tree.root();
-    //     let tmp = state_lock.root();
-    //     println!("body.root: ");
-    //     for b in body.public_input {
-    //         print!("{:02x?} ", b);
-    //     }
-    //     println!("\nstate.merkle_tree.root: {:?}", tmp);
-    //     println!("req.merkle_tree.root: {:?}", public_input);
-    // }
 
     let vk = VerifyingKey::<Bls12_381>::deserialize(body.vk.as_slice()).unwrap();
 

@@ -109,6 +109,10 @@ fn merkle_tree_groht16() {
         let leaf = leaf;
         let path = tree.generate_proof(leaf_idx).unwrap();
 
+        println!("6666 root: {:?}", &root.0);
+        println!("6666 leaf: {:?}", leaf);
+        println!("6666 path: {:?}", &path.leaf_sibling_hash.0);
+
         MyCircuit {
             // constants
             leaf_crh_params,
@@ -135,18 +139,18 @@ fn merkle_tree_groht16() {
     // let public_input = [circuit.root];
     let proof = Groth16::prove(&pk, circuit.clone(), &mut rng).unwrap();
 
-    let public_input = [circuit.root.clone()];
+    // let public_input = [circuit.root.clone()];
     // let valid_proof = Groth16::verify(&vk.clone(), &public_input, &proof.clone()).unwrap();
 
     // --------------------------
 
     // serialize "proof"
     let mut proof_bytes: Vec<u8> = vec![];
-    let ser_proof = proof.serialize(&mut proof_bytes).unwrap();
+    proof.serialize(&mut proof_bytes).unwrap();
 
     // serialize "vk"
     let mut vk_bytes: Vec<u8> = vec![];
-    let ser_vk = vk.serialize(&mut vk_bytes).unwrap();
+    vk.serialize(&mut vk_bytes).unwrap();
 
     // serialize "public_input"
     // let ser_circuit_root = convert_u64_array_to_u8_vec(circuit.root.0.0);
@@ -159,7 +163,7 @@ fn merkle_tree_groht16() {
 
     // let ser_public_input = serde_json::to_string(&ser_circuit_root).unwrap();
 
-    let a = circuit.root.1;
+    // let a = circuit.root.1;
 
     // deserializing all the parameters
     let des_proof = Proof::<Bls12_381>::deserialize(proof_bytes.as_slice()).unwrap();

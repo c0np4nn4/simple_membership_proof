@@ -34,10 +34,14 @@ pub async fn get_path(mut ctx: Context) -> Response {
 
     let mut paths: Vec<Vec<u8>> = vec![];
 
-    for i in 0..(TREE_SIZE / 2) {
+    for i in 0..8 {
         let mut path_bytes: Vec<u8> = vec![];
 
-        let path = merkle_tree.generate_proof(i as usize).unwrap();
+        let path = merkle_tree.generate_proof(i).unwrap();
+
+        if i == 1 {
+            println!("path[{}]: {:?}", i, path.auth_path);
+        }
 
         path.serialize(&mut path_bytes).unwrap();
 
