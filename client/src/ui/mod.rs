@@ -62,13 +62,14 @@ pub fn render_reqs<'a>(
     rect: &mut Frame<CrosstermBackend<Stdout>>,
     req_layout: Vec<Rect>,
     selected_req_item: &ReqItem,
+    // is_send_proof_enetered: bool,
 ) {
     let req_get_path = Block::default()
         .borders(Borders::ALL)
         .style(match selected_req_item {
-            ReqItem::GET_PATH => Style::default().fg(Color::Cyan),
+            ReqItem::GetPath => Style::default().fg(Color::Cyan),
             // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::White),
-            ReqItem::SEND_PROOF => Style::default().fg(Color::White),
+            ReqItem::SendProof => Style::default().fg(Color::White),
         })
         .title("[1] GET TREE")
         .border_type(BorderType::Plain);
@@ -76,9 +77,9 @@ pub fn render_reqs<'a>(
     let req_get_hash_param = Block::default()
         .borders(Borders::ALL)
         .style(match selected_req_item {
-            ReqItem::GET_PATH => Style::default().fg(Color::White),
+            ReqItem::GetPath => Style::default().fg(Color::White),
             // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::Cyan),
-            ReqItem::SEND_PROOF => Style::default().fg(Color::White),
+            ReqItem::SendProof => Style::default().fg(Color::White),
         })
         .title("[2] GET HASH PARAM")
         .border_type(BorderType::Plain);
@@ -86,9 +87,9 @@ pub fn render_reqs<'a>(
     let req_is_member = Block::default()
         .borders(Borders::ALL)
         .style(match selected_req_item {
-            ReqItem::GET_PATH => Style::default().fg(Color::White),
+            ReqItem::GetPath => Style::default().fg(Color::White),
             // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::White),
-            ReqItem::SEND_PROOF => Style::default().fg(Color::Cyan),
+            ReqItem::SendProof => Style::default().fg(Color::Cyan),
         })
         // .title("[3] IS MEMBER")
         .title("[2] SEND PROOF")
@@ -112,18 +113,18 @@ pub fn render_reqs<'a>(
         List::new(descript_gp)
             .block(req_get_path)
             .highlight_style(match selected_req_item {
-                ReqItem::GET_PATH => selected_style,
+                ReqItem::GetPath => selected_style,
                 // ReqItem::GET_HASH_PARAM => default_style,
-                ReqItem::SEND_PROOF => default_style,
+                ReqItem::SendProof => default_style,
             });
 
     let list_im =
         List::new(descript_im)
             .block(req_is_member)
             .highlight_style(match selected_req_item {
-                ReqItem::GET_PATH => default_style,
+                ReqItem::GetPath => default_style,
                 // ReqItem::GET_HASH_PARAM => default_style,
-                ReqItem::SEND_PROOF => selected_style,
+                ReqItem::SendProof => selected_style,
             });
 
     let upper_layout = Layout::default()
@@ -145,9 +146,15 @@ pub fn render_reqs<'a>(
     // rect.render_widget(list_IM, upper_layout[2]);
     rect.render_widget(list_im, upper_layout[1]);
 
+    // if is_send_proof_enetered {
+    //     let input_member_id = render_input_member_id();
+
+    //     rect.render_widget
+    // }
+
     let req_result = render_log();
 
-    rect.render_widget(req_result, req_layout[1]);
+    rect.render_widget(req_result, req_layout[2]);
 }
 
 pub fn render_log<'a>() -> TuiLoggerWidget<'a> {

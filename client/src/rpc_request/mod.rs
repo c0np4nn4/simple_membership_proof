@@ -1,4 +1,3 @@
-pub mod get_hash_params;
 pub mod get_path;
 pub mod get_root;
 pub mod send_proof;

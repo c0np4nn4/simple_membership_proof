@@ -41,9 +41,5 @@ pub async fn get_path(url: hyper::Uri) -> Result<Vec<Vec<u8>>> {
 
     log::info!(" get_path done!");
 
-    for i in 0..(path.len()) {
-        log::info!(" path[{}] [0..8]: {:2x?}", i, &path[i][0..8]);
-    }
-
     Ok(path)
 }

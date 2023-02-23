@@ -37,16 +37,12 @@ pub async fn get_root(url: hyper::Uri) -> Result<Vec<u8>> {
         let frame = next?;
         if let Some(chunk) = frame.data_ref() {
             b = chunk.clone();
-            // log::info!("b: {:?}", b.to_vec());
         }
     }
 
     let root: Vec<u8> = b.to_vec();
 
-    log::info!(" root [0..8]: {:2x?}", root);
-
     log::info!(" get_root done!");
 
     Ok(root)
-    // Ok(vec![])
 }

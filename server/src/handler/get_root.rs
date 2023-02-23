@@ -1,4 +1,4 @@
-use crate::{payment::account::AccountId, Context, Response};
+use crate::{Context, Response};
 use hyper::StatusCode;
 use serde::Deserialize;
 
@@ -23,19 +23,14 @@ fn convert_u64_array_to_u8_vec(array_u64: [u64; 4]) -> Vec<u8> {
 
     for i in 0..4 {
         let a = array_u64[i];
-        // println!("a: {:016x?}", a);
 
         for j in 0..8 {
             let b: u8 = (((a & mask[j]) >> (8 * (7 - j))) & 0xff) as u8;
-            // println!("\tb: {:02x?}", b);
-            //
             res.push(b);
         }
     }
 
     res
-
-    // vec![]
 }
 
 pub async fn get_root(mut ctx: Context) -> Response {
@@ -49,26 +44,13 @@ pub async fn get_root(mut ctx: Context) -> Response {
         }
     };
 
-    println!("body: {:#?}", body);
-
     let state = ctx.state.state_thing;
-    let _acc_id = AccountId(body.account_id);
+
     let state_lock = state.lock().unwrap();
 
-    // let merkle_tree = state_lock.account_merkle_tree.clone();
     let merkle_tree = state_lock.clone();
 
-    // let mut root_vec = Vec::default();
-
-    println!("[1] root: {:?}", merkle_tree.root());
-    println!("[2] root: {:?}", merkle_tree.root().0);
-    println!("[3] root: {:?}", merkle_tree.root().0 .0);
-
-    // merkle_tree.root().0 .0.serialize(&mut root_vec).unwrap();
-
     let root_vec = convert_u64_array_to_u8_vec(merkle_tree.root().0 .0);
-
-    // println!("root: {:?}", root_vec);
 
     Response::new(root_vec.into())
 }

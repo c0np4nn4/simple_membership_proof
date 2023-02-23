@@ -15,9 +15,7 @@ use crate::circuit::{LeafHash, MerkleConfig, TwoToOneHash};
 
 mod circuit;
 mod handler;
-mod payment;
 mod router;
-mod tree;
 
 type SimpleMerkleTree = MerkleTree<MerkleConfig>;
 

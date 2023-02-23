@@ -1,8 +1,8 @@
 use crossterm::{
-    event::{self, Event as CEvent, KeyCode},
-    terminal::{disable_raw_mode, enable_raw_mode},
+    event::{self, EnableMouseCapture, Event as CEvent, KeyCode},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen},
 };
-// use payment::ledger::Parameters;
 use std::io;
 use std::sync::mpsc;
 use std::thread;
@@ -18,9 +18,7 @@ use tui::{
 
 use rpc_request::{get_path::get_path, get_root::get_root, send_proof::send_proof};
 use ui::{render_home, render_reqs};
-// use utils::make_tree;
 
-// mod payment;
 mod rpc_request;
 mod ui;
 mod utils;
@@ -36,6 +34,27 @@ enum MenuItem {
     Request,
 }
 
+enum InputMode {
+    Normal,
+    Edit,
+}
+
+struct App {
+    input: String,
+    input_mode: InputMode,
+    message: Vec<String>,
+}
+
+impl Default for App {
+    fn default() -> App {
+        App {
+            input: String::new(),
+            input_mode: InputMode::Normal,
+            message: Vec::new(),
+        }
+    }
+}
+
 impl From<MenuItem> for usize {
     fn from(input: MenuItem) -> usize {
         match input {
@@ -47,26 +66,23 @@ impl From<MenuItem> for usize {
 
 #[derive(Copy, Clone, Debug)]
 pub enum ReqItem {
-    GET_PATH,
-    // GET_HASH_PARAM,
-    SEND_PROOF,
+    GetPath,
+    SendProof,
 }
 
 impl From<ReqItem> for usize {
     fn from(input: ReqItem) -> usize {
         match input {
-            ReqItem::GET_PATH => 0,
-            // ReqItem::GET_HASH_PARAM => 1,
-            ReqItem::SEND_PROOF => 2,
+            ReqItem::GetPath => 0,
+            ReqItem::SendProof => 2,
         }
     }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    std::env::set_var("RUST_BACKTRACE", "1");
+    enable_raw_mode()?;
 
-    enable_raw_mode().expect("can run in raw mode");
     tui_logger::init_logger(log::LevelFilter::Trace).unwrap();
     tui_logger::set_default_level(log::LevelFilter::Info);
 
@@ -98,13 +114,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
+    let mut app = App::default();
+
     let menu_titles = vec!["Home", "Requests"];
     let mut active_menu_item = MenuItem::Home;
-    let mut selected_req_item = ReqItem::GET_PATH;
+    let mut selected_req_item = ReqItem::GetPath;
 
     let mut path_data: Vec<Vec<u8>> = Vec::new();
-    // let mut root_data: Vec<u8> = Vec::default();
-    let mut root_data: Vec<u8> = vec![1, 2, 3, 4];
+    let mut root_data: Vec<u8> = vec![];
 
     loop {
         terminal.draw(|rect| {
@@ -160,26 +177,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             rect.render_widget(tabs, chunks[0]);
 
             match active_menu_item {
-                MenuItem::Home => {
-                    rect.render_widget(
-                        render_home(
-                            // for check
-                            //
-                            // &mut root_data,
-                            // &path_data,
-                        ),
-                        chunks[1],
-                    )
-                }
+                MenuItem::Home => rect.render_widget(render_home(), chunks[1]),
                 MenuItem::Request => {
                     let req_layout = Layout::default()
                         .direction(Direction::Vertical)
                         .constraints(
-                            [Constraint::Percentage(20), Constraint::Percentage(80)].as_ref(),
+                            [
+                                Constraint::Percentage(20),
+                                Constraint::Percentage(20),
+                                Constraint::Percentage(60),
+                            ]
+                            .as_ref(),
                         )
                         .split(chunks[1]);
 
-                    render_reqs(rect, req_layout, &selected_req_item);
+                    render_reqs(
+                        //
+                        rect,
+                        req_layout,
+                        &selected_req_item,
+                        // is_send_proof_entered,
+                    );
                 }
             }
             rect.render_widget(footer, chunks[2]);
@@ -187,34 +205,57 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         match rx.recv()? {
             Event::Input(event) => match event.code {
-                KeyCode::Char('q') => {
-                    disable_raw_mode()?;
-                    terminal.show_cursor()?;
-                    break;
-                }
-                KeyCode::Char('h') => active_menu_item = MenuItem::Home,
-                KeyCode::Char('r') => active_menu_item = MenuItem::Request,
+                KeyCode::Char('q') => match app.input_mode {
+                    InputMode::Normal => {
+                        disable_raw_mode()?;
+                        terminal.show_cursor()?;
+                        break;
+                    }
+                    InputMode::Edit => {
+                        app.input.push('q');
+                    }
+                },
 
-                KeyCode::Char('1') => {
-                    selected_req_item = ReqItem::GET_PATH;
-                    log::info!(" Request `Get Tree`");
-                }
+                KeyCode::Char('h') => match app.input_mode {
+                    InputMode::Normal => {
+                        active_menu_item = MenuItem::Home;
+                    }
+                    InputMode::Edit => {
+                        app.input.push('h');
+                    }
+                },
 
-                // KeyCode::Char('2') => {
-                //     selected_req_item = ReqItem::GET_HASH_PARAM;
-                //     log::info!(" Request `Get Hash Param`");
-                // }
-                // KeyCode::Char('3') => {
-                //     selected_req_item = ReqItem::IS_MEMBER;
-                //     log::info!(" Request `Is Member`");
-                // }
-                KeyCode::Char('2') => {
-                    selected_req_item = ReqItem::SEND_PROOF;
-                    log::info!(" Request `Is Member`");
-                }
+                KeyCode::Char('r') => match app.input_mode {
+                    InputMode::Normal => {
+                        active_menu_item = MenuItem::Request;
+                    }
+                    InputMode::Edit => {
+                        app.input.push('r');
+                    }
+                },
+
+                KeyCode::Char('1') => match app.input_mode {
+                    InputMode::Normal => {
+                        selected_req_item = ReqItem::GetPath;
+                        log::info!(" Request `Get Tree`");
+                    }
+                    InputMode::Edit => {
+                        app.input.push('1');
+                    }
+                },
+
+                KeyCode::Char('2') => match app.input_mode {
+                    InputMode::Normal => {
+                        selected_req_item = ReqItem::SendProof;
+                        log::info!(" Request `Is Member`");
+                    }
+                    InputMode::Edit => {
+                        app.input.push('2');
+                    }
+                },
 
                 KeyCode::Enter => match selected_req_item {
-                    ReqItem::GET_PATH => {
+                    ReqItem::GetPath => {
                         let url = String::from("http://127.0.0.1:8080/get_path");
                         let url = url.parse::<hyper::Uri>().unwrap();
                         path_data = get_path(url).await.unwrap();
@@ -224,21 +265,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         root_data = get_root(url).await.unwrap();
                     }
 
-                    ReqItem::SEND_PROOF => {
+                    ReqItem::SendProof => {
+                        app.input_mode = InputMode::Edit;
+
                         log::warn!("[!] generating proof...");
 
-                        let mut url = String::from("http://127.0.0.1:8080/send_proof");
-
+                        let url = String::from("http://127.0.0.1:8080/send_proof");
                         let url = url.parse::<hyper::Uri>().unwrap();
-
                         match send_proof(url, &path_data, &root_data).await {
-                            Ok(res) => {
+                            Ok(_) => {
                                 log::warn!("gen proof done!");
                             }
                             Err(e) => {
                                 log::error!("Error: {:?}", e);
                             }
                         };
+
+                        app.input_mode = InputMode::Normal;
                     }
                 },
                 _ => {}
