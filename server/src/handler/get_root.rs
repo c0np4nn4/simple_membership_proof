@@ -34,7 +34,7 @@ fn convert_u64_array_to_u8_vec(array_u64: [u64; 4]) -> Vec<u8> {
 }
 
 pub async fn get_root(mut ctx: Context) -> Response {
-    let body: GetRootRequest = match ctx.body_json().await {
+    let _body: GetRootRequest = match ctx.body_json().await {
         Ok(v) => v,
         Err(e) => {
             return hyper::Response::builder()

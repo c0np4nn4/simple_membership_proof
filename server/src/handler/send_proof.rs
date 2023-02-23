@@ -28,7 +28,7 @@ pub async fn send_proof(mut ctx: Context) -> Response {
     let proof = Proof::<Bls12_381>::deserialize(body.proof.as_slice()).unwrap();
 
     let public_input = convert_u8_vec_to_u64_array(body.public_input.clone());
-    let public_input = Root::new(ark_ff::BigInteger256(public_input));
+    let public_input = Root::new(ark_ff::biginteger::BigInteger256(public_input));
 
     let vk = VerifyingKey::<Bls12_381>::deserialize(body.vk.as_slice()).unwrap();
 

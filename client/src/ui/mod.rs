@@ -10,13 +10,9 @@ use tui::{
 };
 use tui_logger::{TuiLoggerLevelOutput, TuiLoggerWidget};
 
-use crate::ReqItem;
-
-// use crate::utils::{read_db, Request};
+use crate::{App, InputMode, ReqItem};
 
 pub fn render_home<'a>(//
-    // root: &mut Vec<u8>,
-    // path: &Vec<Vec<u8>>,
 ) -> Paragraph<'a> {
     let home = Paragraph::new(vec![
         Spans::from(vec![Span::raw("")]),
@@ -41,11 +37,6 @@ pub fn render_home<'a>(//
         ]),
         Spans::from(vec![Span::raw("")]),
         Spans::from(vec![Span::raw("Press 'r' to access Request page")]),
-        // Spans::from(vec![Span::raw("")]),
-        // Spans::from(vec![Span::raw("")]),
-        // Spans::from(vec![Span::raw(format!("path: {:?}", path))]),
-        // Spans::from(vec![Span::raw("")]),
-        // Spans::from(vec![Span::raw(format!("root: {:?}", root))]),
     ])
     .alignment(Alignment::Center)
     .block(
@@ -62,36 +53,23 @@ pub fn render_reqs<'a>(
     rect: &mut Frame<CrosstermBackend<Stdout>>,
     req_layout: Vec<Rect>,
     selected_req_item: &ReqItem,
-    // is_send_proof_enetered: bool,
+    app: &App,
 ) {
     let req_get_path = Block::default()
         .borders(Borders::ALL)
         .style(match selected_req_item {
             ReqItem::GetPath => Style::default().fg(Color::Cyan),
-            // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::White),
             ReqItem::SendProof => Style::default().fg(Color::White),
         })
         .title("[1] GET TREE")
-        .border_type(BorderType::Plain);
-
-    let req_get_hash_param = Block::default()
-        .borders(Borders::ALL)
-        .style(match selected_req_item {
-            ReqItem::GetPath => Style::default().fg(Color::White),
-            // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::Cyan),
-            ReqItem::SendProof => Style::default().fg(Color::White),
-        })
-        .title("[2] GET HASH PARAM")
         .border_type(BorderType::Plain);
 
     let req_is_member = Block::default()
         .borders(Borders::ALL)
         .style(match selected_req_item {
             ReqItem::GetPath => Style::default().fg(Color::White),
-            // ReqItem::GET_HASH_PARAM => Style::default().fg(Color::White),
             ReqItem::SendProof => Style::default().fg(Color::Cyan),
         })
-        // .title("[3] IS MEMBER")
         .title("[2] SEND PROOF")
         .border_type(BorderType::Thick);
 
@@ -105,16 +83,18 @@ pub fn render_reqs<'a>(
         .fg(Color::Black)
         .add_modifier(Modifier::BOLD);
 
-    let descript_gp = vec![ListItem::new("This is Get Tree Request")];
-    // let descript_GP = vec![ListItem::new("This is Get Hash Param Request")];
-    let descript_im = vec![ListItem::new("This is Is Member Request")];
+    let descript_gp = vec![ListItem::new(
+        "Get necessary data from the Server.\nPaths, Root value, etc.",
+    )];
+    let descript_im = vec![ListItem::new(
+        "Press `Enter` to input `Leaf` and `Leaf Index`",
+    )];
 
     let list_gp =
         List::new(descript_gp)
             .block(req_get_path)
             .highlight_style(match selected_req_item {
                 ReqItem::GetPath => selected_style,
-                // ReqItem::GET_HASH_PARAM => default_style,
                 ReqItem::SendProof => default_style,
             });
 
@@ -123,7 +103,6 @@ pub fn render_reqs<'a>(
             .block(req_is_member)
             .highlight_style(match selected_req_item {
                 ReqItem::GetPath => default_style,
-                // ReqItem::GET_HASH_PARAM => default_style,
                 ReqItem::SendProof => selected_style,
             });
 
@@ -131,9 +110,7 @@ pub fn render_reqs<'a>(
         .direction(Direction::Horizontal)
         .constraints(
             [
-                // Constraint::Percentage(33),
-                // Constraint::Percentage(33),
-                // Constraint::Percentage(33),
+                //
                 Constraint::Percentage(50),
                 Constraint::Percentage(50),
             ]
@@ -142,19 +119,27 @@ pub fn render_reqs<'a>(
         .split(req_layout[0]);
 
     rect.render_widget(list_gp, upper_layout[0]);
-    // rect.render_widget(list_GP, upper_layout[1]);
-    // rect.render_widget(list_IM, upper_layout[2]);
     rect.render_widget(list_im, upper_layout[1]);
 
-    // if is_send_proof_enetered {
-    //     let input_member_id = render_input_member_id();
-
-    //     rect.render_widget
-    // }
+    let input_member_id = render_input_member_id(app);
+    rect.render_widget(input_member_id, req_layout[1]);
 
     let req_result = render_log();
-
     rect.render_widget(req_result, req_layout[2]);
+}
+
+pub fn render_input_member_id<'a>(app: &'a App) -> Paragraph<'a> {
+    let input = Paragraph::new(app.input.as_ref())
+        .style(match app.input_mode {
+            InputMode::Normal => Style::default(),
+            InputMode::Edit => Style::default().fg(Color::Yellow),
+        })
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title("FORM: (leaf_value)<space>(leaf_index)"),
+        );
+    input
 }
 
 pub fn render_log<'a>() -> TuiLoggerWidget<'a> {

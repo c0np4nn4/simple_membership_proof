@@ -37,7 +37,7 @@ pub fn gen_proof_and_vk(
     root: Root,
     path: Path<MerkleConfig>,
 ) -> (Vec<u8>, Vec<u8>) {
-    let leaf = (leaf + 1) * 10;
+    // let leaf = (leaf + 1) * 10;
 
     log::info!("[!] generating proof and VerifyingKey...");
 

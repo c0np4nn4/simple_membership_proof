@@ -172,7 +172,7 @@ fn merkle_tree_groht16() {
     let des_public_input_1: [u64; 4] = convert_u8_vec_to_u64_array(ser_public_input);
     // let des_public_input_2 = BigInteger256(des_public_input_1);
     // let des_public_input_3 = Fp256(des_public_input_2, circuit.root.1);
-    let des_public_input_3 = Root::new(ark_ff::BigInteger256(des_public_input_1));
+    let des_public_input_3 = Root::new(ark_ff::biginteger::BigInteger256(des_public_input_1));
     let des_public_input = [des_public_input_3];
 
     // let public_input = convert_u8_vec_to_u64_array(body.public_input.clone());

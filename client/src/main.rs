@@ -39,10 +39,12 @@ enum InputMode {
     Edit,
 }
 
-struct App {
+pub struct App {
     input: String,
     input_mode: InputMode,
-    message: Vec<String>,
+    //
+    leaf: u8,
+    leaf_idx: u8,
 }
 
 impl Default for App {
@@ -50,7 +52,9 @@ impl Default for App {
         App {
             input: String::new(),
             input_mode: InputMode::Normal,
-            message: Vec::new(),
+            //
+            leaf: 0,
+            leaf_idx: 0,
         }
     }
 }
@@ -109,7 +113,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    let stdout = io::stdout();
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
@@ -196,7 +201,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         rect,
                         req_layout,
                         &selected_req_item,
-                        // is_send_proof_entered,
+                        &app,
                     );
                 }
             }
@@ -254,35 +259,86 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 },
 
-                KeyCode::Enter => match selected_req_item {
-                    ReqItem::GetPath => {
-                        let url = String::from("http://127.0.0.1:8080/get_path");
-                        let url = url.parse::<hyper::Uri>().unwrap();
-                        path_data = get_path(url).await.unwrap();
-
-                        let url = String::from("http://127.0.0.1:8080/get_root");
-                        let url = url.parse::<hyper::Uri>().unwrap();
-                        root_data = get_root(url).await.unwrap();
+                KeyCode::Char(q) => match app.input_mode {
+                    InputMode::Normal => {}
+                    InputMode::Edit => {
+                        app.input.push(q);
                     }
+                },
 
-                    ReqItem::SendProof => {
-                        app.input_mode = InputMode::Edit;
-
-                        log::warn!("[!] generating proof...");
-
-                        let url = String::from("http://127.0.0.1:8080/send_proof");
-                        let url = url.parse::<hyper::Uri>().unwrap();
-                        match send_proof(url, &path_data, &root_data).await {
-                            Ok(_) => {
-                                log::warn!("gen proof done!");
-                            }
-                            Err(e) => {
-                                log::error!("Error: {:?}", e);
-                            }
-                        };
-
-                        app.input_mode = InputMode::Normal;
+                KeyCode::Backspace => match app.input_mode {
+                    InputMode::Normal => {}
+                    InputMode::Edit => {
+                        if app.input.len() > 0 {
+                            app.input.pop();
+                        }
                     }
+                },
+
+                KeyCode::Enter => match app.input_mode {
+                    InputMode::Normal => match selected_req_item {
+                        ReqItem::GetPath => {
+                            let url = String::from("http://127.0.0.1:8080/get_path");
+                            let url = url.parse::<hyper::Uri>().unwrap();
+                            path_data = get_path(url).await.unwrap();
+
+                            let url = String::from("http://127.0.0.1:8080/get_root");
+                            let url = url.parse::<hyper::Uri>().unwrap();
+                            root_data = get_root(url).await.unwrap();
+                        }
+
+                        ReqItem::SendProof => {
+                            app.input_mode = InputMode::Edit;
+                        }
+                    },
+                    InputMode::Edit => match selected_req_item {
+                        ReqItem::GetPath => {}
+                        ReqItem::SendProof => {
+                            let value: Vec<u8> = app
+                                .input
+                                .split(' ')
+                                .map(|v| match v.parse::<u8>() {
+                                    Ok(n) => n,
+                                    Err(_e) => {
+                                        log::error!("Error, non-integer value found, return 0");
+                                        0
+                                    }
+                                })
+                                .collect();
+
+                            app.leaf = value[0];
+                            app.leaf_idx = value[1];
+
+                            log::info!("leaf value: {:?}", app.leaf);
+                            log::info!("leaf index: {:?}", app.leaf_idx);
+
+                            {
+                                log::warn!("[!] generating proof...");
+
+                                let url = String::from("http://127.0.0.1:8080/send_proof");
+                                let url = url.parse::<hyper::Uri>().unwrap();
+                                match send_proof(
+                                    url,
+                                    &path_data,
+                                    &root_data,
+                                    app.leaf,
+                                    app.leaf_idx,
+                                )
+                                .await
+                                {
+                                    Ok(_) => {
+                                        log::warn!("gen proof done!");
+                                    }
+                                    Err(e) => {
+                                        log::error!("Error: {:?}", e);
+                                    }
+                                };
+                            }
+
+                            app.input_mode = InputMode::Normal;
+                            app.input.clear();
+                        }
+                    },
                 },
                 _ => {}
             },

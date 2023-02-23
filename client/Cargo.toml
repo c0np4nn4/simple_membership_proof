@@ -21,6 +21,7 @@ http-body-util = "0.1.0-rc.2"
 bytes = "1"
 
 ark-ff = { version = "^0.3.0" }
+# ark-ff = "0.4.1"
 ark-ec = { version = "^0.3.0" }
 ark-ed-on-bls12-381 = { version = "^0.3.0", features = ["r1cs"] }
 ark-bls12-381 = { version = "^0.3.0" }

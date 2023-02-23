@@ -4,14 +4,12 @@ use crate::utils::proof::gen_proof_and_vk;
 use super::Result;
 
 use ark_crypto_primitives::Path;
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use bytes::Bytes;
+use ark_ff::biginteger::BigInteger256;
+use ark_serialize::CanonicalDeserialize;
 use http_body_util::BodyExt;
 use hyper::Request;
 use serde::Serialize;
 use tokio::net::TcpStream;
-
-use tokio::io::{self, AsyncWriteExt as _};
 
 #[derive(Serialize)]
 struct SendProofRequest {
@@ -20,7 +18,13 @@ struct SendProofRequest {
     vk: Vec<u8>,
 }
 
-pub async fn send_proof(url: hyper::Uri, path: &Vec<Vec<u8>>, root: &Vec<u8>) -> Result<()> {
+pub async fn send_proof(
+    url: hyper::Uri,
+    path: &Vec<Vec<u8>>,
+    root: &Vec<u8>,
+    leaf: u8,
+    leaf_idx: u8,
+) -> Result<()> {
     let host = url.host().expect("uri has no host");
     let port = url.port_u16().unwrap_or(80);
     let addr = format!("{}:{}", host, port);
@@ -36,12 +40,12 @@ pub async fn send_proof(url: hyper::Uri, path: &Vec<Vec<u8>>, root: &Vec<u8>) ->
     let authority = url.authority().unwrap().clone();
 
     // for test, leaf == 1 as u8
-    let leaf = 1u8;
+    // let leaf = 1u8;
 
     let ser_root = root.clone();
 
     let root = convert_u8_vec_to_u64_array(root.clone());
-    let root = Root::new(ark_ff::BigInteger256(root));
+    let root = Root::new(BigInteger256::new(root));
 
     log::info!("root: {:?}", root);
 
@@ -56,7 +60,7 @@ pub async fn send_proof(url: hyper::Uri, path: &Vec<Vec<u8>>, root: &Vec<u8>) ->
     }
 
     let (ser_vk, ser_proof): (Vec<u8>, Vec<u8>) =
-        gen_proof_and_vk(leaf, root, paths[leaf as usize].clone());
+        gen_proof_and_vk(leaf, root, paths[leaf_idx as usize].clone());
 
     let req_body = SendProofRequest {
         proof: ser_proof,
@@ -74,13 +78,10 @@ pub async fn send_proof(url: hyper::Uri, path: &Vec<Vec<u8>>, root: &Vec<u8>) ->
 
     let mut res = sender.send_request(req).await?;
 
-    let mut a: Bytes = Bytes::default();
-
     while let Some(next) = res.frame().await {
         let frame = next?;
 
         if let Some(chunk) = frame.data_ref() {
-            a = chunk.to_owned();
             // io::stdout().write_all(&chunk).await?;
             log::info!("result: {:?}", chunk);
         }

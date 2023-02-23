@@ -1,6 +1,5 @@
-use crate::{circuit::MerkleConfig, Context, Response};
-use ark_crypto_primitives::Path;
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use crate::{Context, Response};
+use ark_serialize::CanonicalSerialize;
 use hyper::StatusCode;
 use serde::Deserialize;
 
