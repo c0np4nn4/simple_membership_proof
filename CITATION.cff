@@ -1,0 +1,6 @@
+@software{arkworks,
+  author = {arkworks contributors},
+  title = {\texttt{arkworks} zkSNARK ecosystem},
+  url = {https://arkworks.rs},
+  year = {2022},
+}

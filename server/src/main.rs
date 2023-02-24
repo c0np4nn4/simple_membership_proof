@@ -1,31 +1,32 @@
+use ark_crypto_primitives::crh::CRH;
+use ark_crypto_primitives::{crh::TwoToOneCRH, MerkleTree};
 use ark_std::test_rng;
 use bytes::Bytes;
-use handler::{add_balance, get_balance, put_message, register_user};
+use handler::{get_path, get_root, send_proof};
 use hyper::{
     body::to_bytes,
     service::{make_service_fn, service_fn},
     Body, Request, Server,
 };
-use payment::{
-    account::{AccountId, AccountPublicKey, AccountSecretKey},
-    ledger::{Amount, Parameters, State},
-};
 use route_recognizer::Params;
 use router::Router;
-use serde::{Deserialize, Serialize};
-use serde_json::from_str;
 use std::sync::{Arc, Mutex};
 
+use crate::circuit::{LeafHash, MerkleConfig, TwoToOneHash};
+
+mod circuit;
 mod handler;
-mod payment;
 mod router;
+
+type SimpleMerkleTree = MerkleTree<MerkleConfig>;
 
 type Response = hyper::Response<hyper::Body>;
 type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub state_thing: Arc<Mutex<State>>,
+    // pub state_thing: Arc<Mutex<State>>,
+    pub state_thing: Arc<Mutex<SimpleMerkleTree>>,
 }
 
 pub struct Context {
@@ -58,66 +59,45 @@ impl Context {
     }
 }
 
-struct AccountInfo {
-    id: AccountId,
-    pk: AccountPublicKey,
-    sk: AccountSecretKey,
-}
-
-impl AccountInfo {
-    pub fn serialize(&self) {
-        let id: u8 = self.id.0;
-        let pk = self.pk.to_string();
-        let sk_pk = self.sk.public_key.to_string();
-        let sk_sk = self.sk.secret_key.to_string();
-
-        println!("{:?}\n{:?}\n{:?}\n{:?}", id, pk, sk_pk, sk_sk);
-    }
-}
-
-pub const TREE_SIZE: u8 = 8;
+pub const TREE_SIZE: usize = 16;
 
 #[tokio::main]
 async fn main() {
-    //
     let mut rng = test_rng();
-    let pp = Parameters::sample(&mut rng);
-    let mut state = State::new(32, &pp);
 
-    for i in 0..15 {
-        let (id, pk, sk) = state.sample_keys_and_register(&pp, &mut rng).unwrap();
-        // println!("[_] user {} info ", i);
-        // println!("\t[1] id: {:?}", id);
-        // println!("\t[2] pk[32..64]: {:?}", &pk.to_string()[32..64]);
-        // println!("\t[3] sk[32..64]: {:?}", &sk.secret_key.to_string()[32..64]);
+    let leaf_crh_params = <LeafHash as CRH>::setup(&mut rng).unwrap();
+    let two_to_one_crh_params = <TwoToOneHash as TwoToOneCRH>::setup(&mut rng).unwrap();
 
-        let acc_info = AccountInfo { id, pk, sk };
+    let tree = SimpleMerkleTree::new(
+        &leaf_crh_params,
+        &two_to_one_crh_params,
+        &[10u8, 20u8, 30u8, 40u8, 50u8, 60u8, 70u8, 80u8],
+    )
+    .unwrap();
 
-        acc_info.serialize();
-    }
+    println!("[!] Tree has been initialized");
 
-    println!("state size: {:?}", state.account_merkle_tree.height());
+    let runtime_tree = Arc::new(Mutex::new(tree));
 
-    let runtime_state = Arc::new(Mutex::new(state));
-
-    //
     let mut router: Router = Router::new();
 
     // get
-    router.get("/get_balance", Box::new(get_balance));
+    router.get("/get_path", Box::new(get_path));
+    router.get("/get_root", Box::new(get_root));
 
     // post
-    router.post("/add_balance", Box::new(add_balance));
-    router.post("/register_user", Box::new(register_user));
-    router.post("/put_message", Box::new(put_message));
+    router.post("/send_proof", Box::new(send_proof));
 
     let shared_router = Arc::new(router);
+
     let new_service = make_service_fn(move |_| {
         let app_state = AppState {
-            state_thing: runtime_state.clone(),
+            // state_thing: runtime_state.clone(),
+            state_thing: runtime_tree.clone(),
         };
 
         let router_capture = shared_router.clone();
+
         async {
             Ok::<_, Error>(service_fn(move |req| {
                 route(router_capture.clone(), req, app_state.clone())
@@ -126,8 +106,11 @@ async fn main() {
     });
 
     let addr = "127.0.0.1:8080".parse().expect("address creation works");
+
     let server = Server::bind(&addr).serve(new_service);
+
     println!("Listening on http://{}", addr);
+
     let _ = server.await;
 }
 
@@ -136,10 +119,19 @@ async fn route(
     req: Request<hyper::Body>,
     app_state: AppState,
 ) -> Result<Response, Error> {
+    println!("\n[route] req: {:?}", req.uri());
+
     let found_handler = router.route(req.uri().path(), req.method());
+
     let resp = found_handler
         .handler
-        .invoke(Context::new(app_state, req, found_handler.params))
+        .invoke(Context::new(
+            app_state,
+            //
+            req,
+            found_handler.params,
+        ))
         .await;
+
     Ok(resp)
 }
