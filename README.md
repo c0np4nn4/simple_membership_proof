@@ -1,7 +1,7 @@
 # Simple membership proving system using zk-SNARK
 
 ## Description
-- 부산대학교 정보보호 동아리 [KEEPER](https://keeper.or.kr/) 의 기술문서 활동의 결과물입니다.
+- 부산대학교 정보보호 동아리 [KEEPER](https://keeper.or.kr/) 의 기술문서 활동 결과물입니다.
 
 - `Cryptography`를 이용한 정보보호의 관점에서 `zk-SNARK` 를 이용한 멤버십 검증 시스템을 구현했습니다.
 
